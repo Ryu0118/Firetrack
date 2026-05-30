@@ -26,7 +26,7 @@ package struct GA4SyncRunner {
         if request.apply {
             try await client.apply(plan: plan, propertyID: context.propertyID, token: token)
         } else {
-            logger.info("\nDry-run only. Re-run with --apply to create missing resources.")
+            logger.info("\nDry-run only (--dry-run). Re-run without --dry-run to create these resources.")
         }
     }
 }

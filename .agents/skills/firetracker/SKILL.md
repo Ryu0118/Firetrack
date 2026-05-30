@@ -10,8 +10,10 @@ truth for Firebase Analytics / GA4: it **validates** the contract, **syncs** mis
 GA4 custom dimensions/metrics/key-events/BigQuery links, and **generates** type-safe
 Swift event code. This skill covers installing the CLI and adopting it in a project.
 
-> For authoring/validating/syncing the tracking plan itself, use the
-> `firebase-ga4-analytics-pro` skill. This skill is install + adoption only.
+When designing the tracking plan, first read
+[references/app-analytics-best-practices.md](references/app-analytics-best-practices.md).
+Firetrack should encode a well-designed app analytics strategy; it should not cause
+agents to create event spam just because YAML makes events easy to declare.
 
 ## 1. Install the `firetrack` CLI
 
@@ -85,13 +87,14 @@ let event = AnalyticsEvent.recordingCompleted(source: .app, distanceM: 1200)
 
 ## 4. (Optional) Sync GA4
 
-Dry-run first, then apply. Apply only **creates** missing resources — it never deletes,
-archives, or renames remote GA4 resources.
+Preview with `--dry-run` first, then run sync for real. Sync only **creates** missing
+resources — it never deletes, archives, or renames remote GA4 resources.
 
 ```bash
-firetrack ga4 diff --config firetrack.yml          # dry-run
-firetrack ga4 sync --config firetrack.yml --apply  # create missing
-firetrack doctor --config firetrack.yml            # check auth/config
+firetrack ga4 diff --config firetrack.yml             # read-only diff
+firetrack ga4 sync --config firetrack.yml --dry-run   # preview, no changes
+firetrack ga4 sync --config firetrack.yml             # create missing
+firetrack doctor --config firetrack.yml               # check auth/config
 ```
 
 Auth resolves in order: `GOOGLE_OAUTH_ACCESS_TOKEN` → `ga4_sync.impersonate_service_account`
@@ -111,4 +114,5 @@ Validate the plan and assert generated code is up to date on every PR:
 ```
 
 The second step fails the build if a committed plan change wasn't regenerated.
-Keep GA4 `sync --apply` out of CI unless service-account auth is configured as a secret.
+Keep GA4 `sync` out of CI unless service-account auth is configured as a secret (it
+applies by default — use `--dry-run` if you only want a CI preview).

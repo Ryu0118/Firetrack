@@ -12,7 +12,7 @@ rules:
   doc: README.md
   message: "CLI command surface changed \u2014 update README (Commands / Quick start)
     if commands or flags changed."
-  checksum: b88bf6230b188b35dea63a3f0606e855bd4135f3d005af8633572af1a9932618
+  checksum: b3a921e0acdaecf3dd963c52d35ce2fc4b552c4b119245f30dfd1df38beeb746
 - name: readme-config
   sources:
   - Sources/FiretrackConfiguration/AnalyticsTrackingConfiguration.swift

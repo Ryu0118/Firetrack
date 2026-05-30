@@ -202,8 +202,8 @@ from the name suffix (`_ms`, `_sec`, `_m`).
 ```bash
 firetrack validate                      # verify the plan: schema, names, rules (offline, no auth)
 firetrack generate --output <path>      # emit type-safe Swift (--overwrite, --access-level)
-firetrack ga4 diff                      # show what GA4 is missing (dry-run)
-firetrack ga4 sync --apply              # create the missing GA4 resources
+firetrack ga4 diff                      # show what GA4 is missing (read-only)
+firetrack ga4 sync                      # create the missing GA4 resources (--dry-run to preview)
 firetrack doctor                        # diagnose GA4 readiness before sync (auth + property + token)
 ```
 
@@ -214,17 +214,18 @@ Every command reads `firetrack.yml` from the current directory by default; pass
 |---------|-----------|
 | `generate` | `--output` (required), `--access-level internal\|package\|public`, `--overwrite` |
 | `ga4 diff` / `ga4 sync` | `--property-id`, `--impersonate-service-account`, `--big-query-project-number`, `--skip-custom-definitions`, `--skip-key-events`, `--skip-bigquery` |
-| `ga4 sync` | `--apply` (without it, sync is a dry-run) |
+| `ga4 sync` | `--dry-run` (preview without creating anything) |
 
 ---
 
 ## Safety model
 
-`ga4 diff` and `ga4 sync` (without `--apply`) are dry-runs. Apply mode **only
-creates missing resources** — Firetrack never deletes, archives, or renames GA4
-resources, and an existing BigQuery link pointing at a different project is a hard
-error. Tokens are resolved in order: `GOOGLE_OAUTH_ACCESS_TOKEN` → impersonated
-service account (IAMCredentials) → `gcloud auth print-access-token`.
+`ga4 diff` is always read-only. `ga4 sync` applies by default and **only creates
+missing resources** — Firetrack never deletes, archives, or renames GA4 resources,
+and an existing BigQuery link pointing at a different project is a hard error. Pass
+`--dry-run` to `sync` to preview the changes without touching GA4. Tokens are resolved
+in order: `GOOGLE_OAUTH_ACCESS_TOKEN` → impersonated service account (IAMCredentials)
+→ `gcloud auth print-access-token`.
 
 ---
 

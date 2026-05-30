@@ -24,7 +24,7 @@ package struct GA4DiffRunner {
             )
             let plan = try GA4SyncPlanner.plan(desired: context.desired, remote: remote)
             GA4OutputFormatter.emitPlan(plan)
-            logger.info("\nDry-run only. Re-run with ga4 sync --apply to create missing resources.")
+            logger.info("\nRead-only diff. Run `ga4 sync` to create these resources.")
         } catch {
             logger.error("\nRemote diff unavailable: \(error)")
             GA4OutputFormatter.emitDesired(context.desired)

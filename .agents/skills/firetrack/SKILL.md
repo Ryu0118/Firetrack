@@ -23,10 +23,11 @@ Never put Yams, URLSession, SwiftSyntax, GA4 endpoint strings, or diff logic in 
 1. Write or update focused tests first.
 2. Run `swift test --package-path Firetrack`.
 3. Run `swift build --package-path Firetrack`.
-4. Validate MyApp YAML with `swift run --package-path Firetrack firetrack validate --config firetrack.yml`.
-5. For GA4 work, dry-run before apply:
+4. Validate the tracking plan with `swift run --package-path Firetrack firetrack validate --config firetrack.yml`.
+5. For GA4 work, preview with `--dry-run` before syncing for real:
    - `swift run --package-path Firetrack firetrack ga4 diff --config firetrack.yml`
-   - `swift run --package-path Firetrack firetrack ga4 sync --config firetrack.yml --apply`
+   - `swift run --package-path Firetrack firetrack ga4 sync --config firetrack.yml --dry-run`
+   - `swift run --package-path Firetrack firetrack ga4 sync --config firetrack.yml`
 
 ## Design Rules
 
