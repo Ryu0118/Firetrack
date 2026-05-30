@@ -88,49 +88,59 @@ struct ConfigurationTests {
         #expect(metric.description == "Firetrack analytics metric: distance_m")
     }
 
-    @Test
-    func piiParameterCannotBecomeGA4ReportingConfig() throws {
-        let yaml = """
-        version: 1
-        events:
-          search_performed:
-            parameters:
-              query_text:
-                type: string
-                pii: true
-                ga4_custom_dimension: true
-              result_count:
-                type: int
-                pii: true
-                ga4_custom_metric: true
-        """
-
+    @Test(
+        "A PII parameter registered as a GA4 custom definition is rejected",
+        arguments: [
+            // Param-level pii on a custom dimension.
+            (
+                yaml: """
+                version: 1
+                events:
+                  search_performed:
+                    parameters:
+                      query_text:
+                        type: string
+                        pii: true
+                        ga4_custom_dimension: true
+                """,
+                expectedErrorFragment: "events.search_performed.parameters.query_text.ga4_custom_dimension",
+            ),
+            // Param-level pii on a custom metric.
+            (
+                yaml: """
+                version: 1
+                events:
+                  search_performed:
+                    parameters:
+                      result_count:
+                        type: int
+                        pii: true
+                        ga4_custom_metric: true
+                """,
+                expectedErrorFragment: "events.search_performed.parameters.result_count.ga4_custom_metric",
+            ),
+            // Event-level pii propagates to a registered parameter.
+            (
+                yaml: """
+                version: 1
+                events:
+                  profile_viewed:
+                    pii: true
+                    parameters:
+                      viewer_role:
+                        type: enum
+                        allowed: [self, other]
+                        ga4_custom_dimension: true
+                """,
+                expectedErrorFragment: "events.profile_viewed.parameters.viewer_role.ga4_custom_dimension",
+            ),
+        ],
+    )
+    func piiParameterCannotBecomeGA4ReportingConfig(yaml: String, expectedErrorFragment: String) throws {
         let configuration = try AnalyticsConfigurationLoader.load(yaml: yaml)
         let errors = AnalyticsConfigurationValidator.validate(configuration).errors.map(\.description)
-
-        #expect(errors.contains { $0.contains("query_text.ga4_custom_dimension") && $0.contains("PII parameter") })
-        #expect(errors.contains { $0.contains("result_count.ga4_custom_metric") && $0.contains("PII parameter") })
+        #expect(errors.contains { $0.contains(expectedErrorFragment) && $0.contains("PII parameter") })
         #expect(errors == errors.sorted())
-    }
-
-    @Test
-    func eventLevelPIIPropagatesToEveryParameter() throws {
-        let yaml = """
-        version: 1
-        events:
-          profile_viewed:
-            pii: true
-            parameters:
-              viewer_role:
-                type: enum
-                allowed: [self, other]
-                ga4_custom_dimension: true
-        """
-
-        let configuration = try AnalyticsConfigurationLoader.load(yaml: yaml)
-        let errors = AnalyticsConfigurationValidator.validate(configuration).errors.map(\.description)
-
-        #expect(errors.contains { $0.contains("viewer_role.ga4_custom_dimension") && $0.contains("PII parameter") })
     }
 
     @Test
