@@ -79,11 +79,67 @@ Verify with `firetrack --version`. Requires **macOS 26+**.
    firetrack generate --output Sources/Analytics/GeneratedAnalytics.swift --overwrite
    ```
 
-4. Log events with no stringly-typed names:
+4. Build an event with no stringly-typed names, and log it to Firebase:
 
    ```swift
    let event = AnalyticsEvent.recordingCompleted(source: .app, distanceM: 1200)
+   Analytics.logEvent(event.name, parameters: event.firebaseParameters)
    ```
+
+   See [Logging to Firebase](#logging-to-firebase) for the one-time `firebaseParameters` bridge.
+
+---
+
+## Logging to Firebase
+
+`firetrack generate` emits an `AnalyticsEvent` enum where every case carries its
+parameters as compile-checked associated values, plus two computed properties:
+
+```swift
+enum AnalyticsEvent {
+    case recordingCompleted(distanceM: Double, source: SourceValue)
+
+    var name: String                       // "recording_completed"
+    var parameters: [String: AnalyticsValue] // ["distance_m": .double(1200), "source": .string("app")]
+}
+```
+
+`AnalyticsValue` is a closed enum (`.string` / `.int` / `.double` / `.bool`), so add a
+small bridge to Firebase's untyped parameter dictionary **once** — in your app, not in
+the generated file:
+
+```swift
+import FirebaseAnalytics
+
+extension AnalyticsValue {
+    var firebaseValue: Any {
+        switch self {
+        case let .string(value): value
+        case let .int(value): value
+        case let .double(value): value
+        case let .bool(value): value
+        }
+    }
+}
+
+extension AnalyticsEvent {
+    var firebaseParameters: [String: Any] {
+        parameters.mapValues(\.firebaseValue)
+    }
+
+    /// Logs this event to Firebase Analytics.
+    func log() {
+        Analytics.logEvent(name, parameters: firebaseParameters)
+    }
+}
+```
+
+Now every call site is type-checked end to end — a wrong parameter name or type is a
+compile error, and the event/param strings sent to Firebase always match the plan:
+
+```swift
+AnalyticsEvent.recordingCompleted(source: .app, distanceM: 1200).log()
+```
 
 ---
 
@@ -199,6 +255,39 @@ before it is ever written to disk.
 ```
 
 The build fails if a plan change wasn't regenerated and committed.
+
+---
+
+## Agent Skills
+
+Firetrack ships a **`firetracker`** [Agent Skill](https://agentskills.io) so your AI agent
+can install the CLI and adopt it in a project for you — set up `analytics-tracking-plan.yaml`,
+generate the Swift contract, and wire it into CI. Install it:
+
+```bash
+# via skills CLI (https://github.com/vercel-labs/skills)
+npx skills add Ryu0118/Firetracker --skill firetracker -g
+
+# or download directly to ~/.agents/skills/ (Agent Skills standard)
+mkdir -p ~/.agents/skills/firetracker/references
+curl -fsSL https://raw.githubusercontent.com/Ryu0118/Firetracker/main/.agents/skills/firetracker/SKILL.md \
+  -o ~/.agents/skills/firetracker/SKILL.md
+curl -fsSL https://raw.githubusercontent.com/Ryu0118/Firetracker/main/.agents/skills/firetracker/references/yaml-schema.md \
+  -o ~/.agents/skills/firetracker/references/yaml-schema.md
+
+# for Claude Code: also install to ~/.claude/skills/
+mkdir -p ~/.claude/skills/firetracker/references
+curl -fsSL https://raw.githubusercontent.com/Ryu0118/Firetracker/main/.agents/skills/firetracker/SKILL.md \
+  -o ~/.claude/skills/firetracker/SKILL.md
+curl -fsSL https://raw.githubusercontent.com/Ryu0118/Firetracker/main/.agents/skills/firetracker/references/yaml-schema.md \
+  -o ~/.claude/skills/firetracker/references/yaml-schema.md
+```
+
+Then tell your agent:
+
+```
+/firetracker set up an analytics tracking plan for my iOS app
+```
 
 ---
 
