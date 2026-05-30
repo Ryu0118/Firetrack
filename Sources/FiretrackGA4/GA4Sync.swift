@@ -90,18 +90,11 @@ package enum GA4SyncPlanner {
         let existingDimensionNames = Set(remote.customDimensions.compactMap(\.parameterName))
         let existingMetricNames = Set(remote.customMetrics.compactMap(\.parameterName))
         let existingEventNames = Set(remote.keyEvents.compactMap(\.eventName))
-        let existingProjects = Set(remote.bigQueryLinks.compactMap(\.project))
 
-        var missingLinks: [GA4BigQueryLink] = []
-        if let link = desired.bigQueryLink {
-            if existingProjects.contains(link.project) {
-                missingLinks = []
-            } else if !existingProjects.isEmpty {
-                throw GA4SyncError.conflictingBigQueryLink(existing: existingProjects.sorted(), desired: link.project)
-            } else {
-                missingLinks = [link]
-            }
-        }
+        let missingLinks = try resolveMissingBigQueryLinks(
+            desired: desired.bigQueryLink,
+            remote: remote.bigQueryLinks,
+        )
 
         return GA4SyncPlan(
             missingCustomDimensions: desired.customDimensions.filter {
@@ -111,6 +104,20 @@ package enum GA4SyncPlanner {
             missingKeyEvents: desired.keyEvents.filter { !existingEventNames.contains($0.eventName) },
             missingBigQueryLinks: missingLinks,
         )
+    }
+
+    /// Resolves which BigQuery links are missing, refusing to create a conflicting link.
+    private static func resolveMissingBigQueryLinks(
+        desired: GA4BigQueryLink?,
+        remote: [RemoteBigQueryLink],
+    ) throws -> [GA4BigQueryLink] {
+        guard let link = desired else { return [] }
+        let existingProjects = Set(remote.compactMap(\.project))
+        if existingProjects.contains(link.project) { return [] }
+        guard existingProjects.isEmpty else {
+            throw GA4SyncError.conflictingBigQueryLink(existing: existingProjects.sorted(), desired: link.project)
+        }
+        return [link]
     }
 }
 
