@@ -119,12 +119,15 @@ parameters as compile-checked associated values, plus two computed properties:
 
 ```swift
 enum AnalyticsEvent {
+    /// A drive recording finished successfully.
     case recordingCompleted(distanceM: Double, source: SourceValue)
 
     var name: String                       // "recording_completed"
     var parameters: [String: AnalyticsValue] // ["distance_m": .double(1200), "source": .string("app")]
 }
 ```
+
+An event's `description` becomes a `///` doc comment on its generated case.
 
 `AnalyticsValue` is a closed enum (`.string` / `.int` / `.double` / `.bool`), so add a
 small bridge to Firebase's untyped parameter dictionary **once** — in your app, not in
@@ -225,11 +228,13 @@ GA4 — `validate` fails if it would.
 ## Commands
 
 ```bash
+firetrack init                          # scaffold a starter firetrack.yml (greenfield)
+firetrack pull                          # scaffold a plan from an existing GA4 property (brownfield)
 firetrack validate                      # verify the plan: schema, names, rules (offline, no auth)
 firetrack generate --output <path>      # emit type-safe Swift (--overwrite, --access-level)
 firetrack ga4 diff                      # show what GA4 is missing (read-only)
 firetrack ga4 sync                      # create the missing GA4 resources (--dry-run to preview)
-firetrack doctor                        # diagnose GA4 readiness before sync (auth + property + token)
+firetrack doctor                        # diagnose GA4 readiness; --check-remote lists remote drift
 ```
 
 Every command reads `firetrack.yml` from the current directory by default; pass
@@ -237,9 +242,16 @@ Every command reads `firetrack.yml` from the current directory by default; pass
 
 | Command | Key flags |
 |---------|-----------|
+| `init` | `--config` (output path), `--overwrite` |
+| `pull` | `--property-id` (or `GA4_PROPERTY_ID`), `--impersonate-service-account`, `--overwrite` |
 | `generate` | `--output` (required), `--access-level internal\|package\|public`, `--overwrite` |
 | `ga4 diff` / `ga4 sync` | `--property-id`, `--impersonate-service-account`, `--big-query-project-number`, `--skip-custom-definitions`, `--skip-key-events`, `--skip-bigquery` |
 | `ga4 sync` | `--dry-run` (preview without creating anything) |
+| `doctor` | `--check-remote` (list remote GA4 definitions absent from the plan, read-only) |
+
+`pull` writes a **scaffold**, not a faithful mirror: GA4 has no event or
+parameter-type schema, so dimensions come back as `string`, metrics as `double`,
+and events as stubs from the key-event list. Review and edit before syncing.
 
 ---
 

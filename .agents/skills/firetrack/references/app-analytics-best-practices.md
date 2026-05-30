@@ -23,6 +23,9 @@ decision, do not add it.
 Prefer a small stable taxonomy with bounded parameters.
 
 - Use stable `snake_case` event names and parameter names.
+- Name events `object_action` with a past-tense verb (`recording_completed`,
+  `paywall_viewed`, `purchase_failed`) — not `completed_recording`. This is the
+  convention Amplitude, Mixpanel, and Segment all converge on.
 - Do not use dynamic event names or dynamic parameter keys.
 - Put variants in parameters, not in event names.
 - Use enum parameters for `source`, `surface`, `mode`, `result`, `reason`,

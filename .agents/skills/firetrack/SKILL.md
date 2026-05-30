@@ -55,6 +55,17 @@ Verify: `firetrack --version`. Requires **macOS 26+**.
 
 ### 2. Create the tracking plan
 
+Two scaffolding shortcuts, or write the file by hand:
+
+- **Greenfield**: `firetrack init` writes a minimal, valid starter `firetrack.yml`.
+- **Brownfield** (a GA4 property already exists): `firetrack pull` reads the
+  property's custom dimensions/metrics/key events and writes a starting plan.
+  This is a **scaffold, not a mirror** — GA4 has no event/parameter-type schema,
+  so dimensions come back as `string`, metrics as `double`, and events as stubs.
+  Review and edit (especially parameter types) before syncing.
+
+Both refuse to overwrite an existing file without `--overwrite`.
+
 Place `firetrack.yml` at the working-directory root (the default `--config` path;
 override with `--config <path>` to put it anywhere). Minimal valid plan:
 
@@ -102,11 +113,15 @@ Preview with `--dry-run` first, then run sync for real. Sync only **creates** mi
 resources — it never deletes, archives, or renames remote GA4 resources.
 
 ```bash
-firetrack ga4 diff --config firetrack.yml             # read-only diff
-firetrack ga4 sync --config firetrack.yml --dry-run   # preview, no changes
-firetrack ga4 sync --config firetrack.yml             # create missing
-firetrack doctor --config firetrack.yml               # check auth/config
+firetrack ga4 diff --config firetrack.yml               # read-only diff
+firetrack ga4 sync --config firetrack.yml --dry-run     # preview, no changes
+firetrack ga4 sync --config firetrack.yml               # create missing
+firetrack doctor --config firetrack.yml                 # check auth/config
+firetrack doctor --config firetrack.yml --check-remote  # also list remote drift (read-only)
 ```
+
+`doctor --check-remote` lists custom dimensions/metrics that exist in GA4 but are
+absent from the plan. It only reports — Firetrack never deletes remote resources.
 
 Auth resolves in order: `GOOGLE_OAUTH_ACCESS_TOKEN` → `ga4_sync.impersonate_service_account`
 (IAMCredentials) → `gcloud auth print-access-token`. Required scopes:
@@ -141,6 +156,25 @@ Benefits:
 - repeatable GA4 Admin API setup without GUI clicking
 - code generation that removes event-name and parameter-name drift
 - MCP/agent analysis can reason over one YAML contract
+
+### Naming
+
+Name events `object_action` with a past-tense verb — the convention every major
+analytics vendor converges on (`recording_completed`, `paywall_viewed`,
+`purchase_failed`), not `completed_recording` or `recordingDone`. Put variants in
+enum parameters, never in the event name (`add_to_cart` + `item`, not
+`add_shirt_to_cart`). Event, parameter, and enum-value names are `snake_case`;
+`validate` enforces that. See
+[references/app-analytics-best-practices.md](references/app-analytics-best-practices.md).
+
+### Out of scope: experimentation
+
+Firetrack is the event-taxonomy layer. A/B testing and feature flags
+(Firebase A/B Testing, Statsig, GrowthBook, …) sit *on top* of it — they read the
+events Firetrack defines but assign variants and compute statistics at runtime.
+Keep that layer separate; do not model experiment assignment or variant logic in
+`firetrack.yml`. A variant is fine as an enum *parameter* on an event; the
+experiment engine itself is not Firetrack's job.
 
 ### Practical event coverage
 

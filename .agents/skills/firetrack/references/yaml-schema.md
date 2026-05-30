@@ -83,14 +83,17 @@ screens:
 ```yaml
 events:
   recording_completed:
-    description: Drive recording completed successfully.   # optional
-    owner: product                                         # optional
-    retention_anchor: true                                 # optional
+    description: Drive recording completed successfully.   # optional; becomes a /// doc comment
+    fire_when: The user stops a recording and it saves.    # optional; documents the trigger
+    owner: product                                         # optional; team/domain owner
+    retention_anchor: true                                 # optional; activation/retention anchor
     pii: false                                             # true ⇒ no GA4 custom def
     parameters:
       source:
         type: enum
         required: true
+        display_name: Recording Source                     # optional; GA4 custom dimension display name
+        description: Where the recording was started from. # optional; GA4 custom definition description
         ga4_custom_dimension: true
       distance_m:
         type: double
@@ -102,6 +105,11 @@ events:
         ga4_custom_metric: true
 ```
 
+Event metadata fields (`description`, `fire_when`, `owner`, `retention_anchor`)
+are not enforced by `validate` — they document intent and feed reporting:
+`description` becomes a doc comment on the generated Swift case, and `doctor`
+surfaces missing `owner`/`fire_when` coverage and lists retention anchors.
+
 ## Parameter types
 
 | Field | Values | Notes |
@@ -109,6 +117,8 @@ events:
 | `type` | `enum`, `string`, `int`, `double`, `bool` | required |
 | `required` | `true` / `false` | default `false` |
 | `allowed` | list of snake_case values | for `type: enum` |
+| `description` | free text | GA4 custom definition description (falls back to a default) |
+| `display_name` | free text | GA4 custom dimension/metric display name (falls back to the humanized name) |
 | `ga4_custom_dimension` | `true` | register as GA4 custom dimension |
 | `ga4_custom_metric` | `true` | register as GA4 custom metric — **only `int`/`double`** |
 | `pii` | `true` / `false` | marks personally identifiable data; cannot be a GA4 custom dimension/metric |
