@@ -86,7 +86,7 @@ events:
     description: Drive recording completed successfully.   # optional
     owner: product                                         # optional
     retention_anchor: true                                 # optional
-    pii: false                                             # must be false in v1
+    pii: false                                             # true ⇒ no GA4 custom def
     parameters:
       source:
         type: enum
@@ -111,6 +111,7 @@ events:
 | `allowed` | list of snake_case values | for `type: enum` |
 | `ga4_custom_dimension` | `true` | register as GA4 custom dimension |
 | `ga4_custom_metric` | `true` | register as GA4 custom metric — **only `int`/`double`** |
+| `pii` | `true` / `false` | marks personally identifiable data; cannot be a GA4 custom dimension/metric |
 
 GA4 metric measurement unit is inferred from the parameter-name suffix:
 `_ms` → MILLISECONDS, `_sec` → SECONDS, `_m` → METERS, otherwise STANDARD.
@@ -124,5 +125,9 @@ GA4 metric measurement unit is inferred from the parameter-name suffix:
 - `ga4_custom_metric` is only valid on `int`/`double` parameters.
 - `enum` values in `allowed` must be `snake_case`.
 - Every `ga4_sync.key_events` entry must reference a defined event.
-- `pii: true` is **not supported in v1** — keep it `false`.
+- A `pii: true` parameter (or any parameter under an event marked `pii: true`)
+  must not also set `ga4_custom_dimension`/`ga4_custom_metric`. GA4 must never
+  receive personally identifiable information; Google rejects PII in custom
+  definitions. A PII parameter may still be declared and logged locally — it
+  just cannot become GA4 reporting config.
 - `TODO` placeholders in `destinations`/`ga4_sync` must be replaced before sync.

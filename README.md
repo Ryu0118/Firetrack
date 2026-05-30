@@ -215,7 +215,10 @@ events:
 `validate` enforces snake_case names, GA4-safe prefixes, metric type rules
 (`int`/`double` only), enum value formatting, and key-event references —
 deterministically, with sorted output. `ga4_custom_metric` units are inferred
-from the name suffix (`_ms`, `_sec`, `_m`).
+from the name suffix (`_ms`, `_sec`, `_m`). A parameter marked `pii: true` (or
+any parameter under an event marked `pii: true`) must not also be registered as
+a GA4 custom dimension or metric, so personally identifiable data never reaches
+GA4 — `validate` fails if it would.
 
 ---
 
