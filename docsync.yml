@@ -30,7 +30,7 @@ rules:
   doc: README.md
   message: "Swift codegen output shape changed \u2014 update README (Quick start generated
     example)."
-  checksum: 9be799b1f284b97787b573779b197bab3de63aa89983c053f7291b9a8097a8e2
+  checksum: 55cc915478fe920cb6c39e83cf0428b65a8d9dba4f39687781b692014fedf21d
 - name: agents-architecture
   sources:
   - Package.swift
@@ -40,4 +40,4 @@ rules:
   doc: AGENTS.md
   message: "Module graph, logging setup, or entry point changed \u2014 update AGENTS.md
     (Architecture / Conventions)."
-  checksum: 60b809cb97e198c7d5733775fc3638d0b15f4b027f28949dea9cb2b0f6e8e7e5
+  checksum: 455229ed71d61c3e023f3776e27852b7e8fb1f2283a325980d443614128698f1
