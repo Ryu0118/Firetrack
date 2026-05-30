@@ -9,13 +9,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install gitleaks
-        run: |
-          VERSION=8.30.1
-          curl -fsSL "https://github.com/gitleaks/gitleaks/releases/download/v${VERSION}/gitleaks_${VERSION}_linux_x64.tar.gz" \
-            | tar -xz -C /usr/local/bin gitleaks
+      # Resolve gitleaks from .mise.toml — same tool/version as the local pre-commit hook.
+      - uses: jdx/mise-action@v2
 
       # Scan the full history directly. Avoids gitleaks-action's push-range mode,
       # which fails on the initial commit (no parent revision to diff against).
       - name: Scan
-        run: gitleaks detect --source . --redact -v --exit-code 1
+        run: mise exec -- gitleaks detect --source . --redact -v --exit-code 1
