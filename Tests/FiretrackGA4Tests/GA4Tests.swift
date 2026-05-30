@@ -51,17 +51,17 @@ struct GA4Tests {
 
     @Test
     func clientPaginationAndApplyTreatsAlreadyExistsAsNoop() async throws {
-        let http = FakeHTTPClient(
-            responses: [
-                #"{"customDimensions":[{"parameterName":"source"}],"nextPageToken":"next"}"#,
-                #"{"customDimensions":[{"parameterName":"screen_name"}]}"#,
-                #"{"customMetrics":[]}"#,
-                #"{"keyEvents":[]}"#,
-                #"{"bigqueryLinks":[]}"#,
-                #"{"error":{"status":"ALREADY_EXISTS"}}"#,
+        // Responses are keyed by endpoint so the test is independent of the order in which
+        // remoteState issues its concurrent fetches. customDimensions paginates (page 1 → page 2).
+        let http = FakeHTTPClient(routes: [
+            "customDimensions": [
+                .init(status: 200, body: #"{"customDimensions":[{"parameterName":"source"}],"nextPageToken":"next"}"#),
+                .init(status: 200, body: #"{"customDimensions":[{"parameterName":"screen_name"}]}"#),
             ],
-            statusCodes: [200, 200, 200, 200, 200, 409],
-        )
+            "customMetrics": [.init(status: 200, body: #"{"customMetrics":[]}"#)],
+            "keyEvents": [.init(status: 200, body: #"{"keyEvents":[]}"#)],
+            "bigqueryLinks": [.init(status: 200, body: #"{"bigqueryLinks":[]}"#)],
+        ])
         let client = GA4AdminClient(
             httpClient: http,
             betaBaseURL: URL(string: "https://example.com/v1beta"),
@@ -71,6 +71,11 @@ struct GA4Tests {
         let remote = try await client.remoteState(propertyID: "123", token: "token", includeBigQuery: true)
         #expect(remote.customDimensions.map(\.parameterName) == ["source", "screen_name"])
 
+        // apply runs after remoteState; ALREADY_EXISTS (409) is treated as a no-op.
+        await http.setRoute(
+            "customDimensions:create",
+            [.init(status: 409, body: #"{"error":{"status":"ALREADY_EXISTS"}}"#)],
+        )
         try await client.apply(
             plan: .init(
                 missingCustomDimensions: [
@@ -83,26 +88,68 @@ struct GA4Tests {
             propertyID: "123",
             token: "token",
         )
-        #expect(http.requests.count == 6)
-        #expect(http.requests[1].url.absoluteString.contains("pageToken=next"))
+
+        let urls = await http.requestURLs
+        // 5 reads (customDimensions paginated ×2 + 3 others) + 1 apply create.
+        #expect(urls.count == 6)
+        #expect(urls.contains { $0.contains("pageToken=next") })
+    }
+
+    @Test
+    func validationRejectsConflictingParameterAcrossEvents() {
+        let configuration = AnalyticsTrackingConfiguration(
+            version: 1,
+            events: [
+                "first_event": .init(parameters: [
+                    "source": .init(type: .enumeration, allowed: ["app"]),
+                ]),
+                "second_event": .init(parameters: [
+                    "source": .init(type: .enumeration, allowed: ["app", "widget"]),
+                ]),
+            ],
+        )
+        let report = AnalyticsConfigurationValidator.validate(configuration)
+        #expect(!report.isValid)
+        #expect(report.errors.contains { $0.message.contains("conflicting allowed values") })
     }
 }
 
-private final class FakeHTTPClient: GA4HTTPClient, @unchecked Sendable {
-    var responses: [String]
-    var statusCodes: [Int]
-    var requests: [GA4HTTPRequest] = []
+private struct FakeResponse {
+    var status: Int
+    var body: String
+}
 
-    init(responses: [String], statusCodes: [Int]) {
-        self.responses = responses
-        self.statusCodes = statusCodes
+private actor FakeHTTPClient: GA4HTTPClient {
+    private var routes: [String: [FakeResponse]]
+    private(set) var requestURLs: [String] = []
+
+    init(routes: [String: [FakeResponse]]) {
+        self.routes = routes
+    }
+
+    func setRoute(_ key: String, _ responses: [FakeResponse]) {
+        routes[key] = responses
     }
 
     func send(_ request: GA4HTTPRequest) async throws -> GA4HTTPResponse {
-        requests.append(request)
-        return .init(
-            statusCode: statusCodes.removeFirst(),
-            body: Data(responses.removeFirst().utf8),
-        )
+        let url = request.url.absoluteString
+        requestURLs.append(url)
+        let key = Self.routeKey(for: request)
+        guard var queue = routes[key], !queue.isEmpty else {
+            return .init(statusCode: 200, body: Data("{}".utf8))
+        }
+        let response = queue.removeFirst()
+        routes[key] = queue
+        return .init(statusCode: response.status, body: Data(response.body.utf8))
+    }
+
+    private static func routeKey(for request: GA4HTTPRequest) -> String {
+        let url = request.url.absoluteString
+        let isCreate = request.method == .post
+        if url.contains("customDimensions") { return isCreate ? "customDimensions:create" : "customDimensions" }
+        if url.contains("customMetrics") { return isCreate ? "customMetrics:create" : "customMetrics" }
+        if url.contains("keyEvents") { return isCreate ? "keyEvents:create" : "keyEvents" }
+        if url.contains("bigQueryLinks") || url.contains("bigqueryLinks") { return "bigqueryLinks" }
+        return "unknown"
     }
 }

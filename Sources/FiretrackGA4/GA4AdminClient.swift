@@ -29,12 +29,14 @@ package struct GA4AdminClient {
     }
 
     /// Fetches remote GA4 state needed to compute a Firetrack sync plan.
+    ///
+    /// The independent list calls run concurrently to cut the user-visible wait.
     package func remoteState(propertyID: String, token: String, includeBigQuery: Bool) async throws -> GA4RemoteState {
-        let dimensions = try await listCustomDimensions(propertyID: propertyID, token: token)
-        let metrics = try await listCustomMetrics(propertyID: propertyID, token: token)
-        let keyEvents = try await listKeyEvents(propertyID: propertyID, token: token)
-        let links = includeBigQuery ? try await listBigQueryLinks(propertyID: propertyID, token: token) : []
-        return GA4RemoteState(
+        async let dimensions = listCustomDimensions(propertyID: propertyID, token: token)
+        async let metrics = listCustomMetrics(propertyID: propertyID, token: token)
+        async let keyEvents = listKeyEvents(propertyID: propertyID, token: token)
+        async let links = includeBigQuery ? listBigQueryLinks(propertyID: propertyID, token: token) : []
+        return try await GA4RemoteState(
             customDimensions: dimensions,
             customMetrics: metrics,
             keyEvents: keyEvents,
