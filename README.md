@@ -260,24 +260,6 @@ Impersonation requests the `analytics.edit` and `analytics.readonly` scopes.
 
 ---
 
-## Architecture
-
-```mermaid
-graph TD
-    Wrapper["firetrack<br/>executable"] --> CLI["FiretrackCLI<br/>ArgumentParser"]
-    CLI --> Ops["FiretrackOperations<br/>runners / output"]
-    Ops --> Config["FiretrackConfiguration<br/>YAML / validation"]
-    Ops --> GA4["FiretrackGA4<br/>Admin API / auth"]
-    Ops --> Gen["FiretrackSwiftGenerator<br/>SwiftSyntax codegen"]
-    GA4 --> Config
-    Gen --> Config
-```
-
-Generated Swift is byte-stable for identical YAML and is parsed with SwiftSyntax
-before it is ever written to disk.
-
----
-
 ## CI integration
 
 ```yaml
