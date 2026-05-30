@@ -1,3 +1,4 @@
+import FiretrackConfiguration
 @testable import FiretrackOperations
 import Foundation
 import Testing
@@ -22,6 +23,24 @@ struct OperationsTests {
                 planPath: plan.path(percentEncoded: false),
                 outputPath: output.path(percentEncoded: false),
             ))
+        }
+    }
+
+    @Test
+    func initRunnerWritesAValidScaffoldAndRefusesToClobber() throws {
+        let directory = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let plan = directory.appending(path: "firetrack.yml")
+
+        try InitRunner().run(.init(outputPath: plan.path(percentEncoded: false)))
+
+        // The scaffold is a valid plan.
+        let configuration = try AnalyticsConfigurationLoader.load(path: plan.path(percentEncoded: false))
+        #expect(AnalyticsConfigurationValidator.validate(configuration).isValid)
+
+        // A second run without --overwrite refuses to clobber.
+        #expect(throws: (any Error).self) {
+            try InitRunner().run(.init(outputPath: plan.path(percentEncoded: false)))
         }
     }
 
