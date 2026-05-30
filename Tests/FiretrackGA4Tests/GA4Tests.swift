@@ -55,13 +55,15 @@ struct GA4Tests {
             customDimensions: [.init(parameterName: "source", displayName: "Source", description: "where from")],
             customMetrics: [.init(parameterName: "distance_m", displayName: "Distance", measurementUnit: "METERS")],
             keyEvents: [.init(name: nil, eventName: "recording_completed")],
-            bigQueryLinks: [],
+            bigQueryLinks: [.init(name: nil, project: "projects/456")],
         )
 
         let configuration = GA4RemoteStateReverser.configuration(from: remote, propertyID: "123")
 
         #expect(configuration.destinations?.ga4?.propertyID == "123")
         #expect(configuration.ga4Sync?.keyEvents == ["recording_completed"])
+        #expect(configuration.ga4Sync?.bigQueryLink?.enabled == true)
+        #expect(configuration.ga4Sync?.bigQueryLink?.projectNumber == "456")
         #expect(configuration.events["recording_completed"] != nil)
 
         let dimension = try? #require(configuration.globalParameters["source"])

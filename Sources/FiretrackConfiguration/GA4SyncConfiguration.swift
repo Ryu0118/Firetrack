@@ -40,6 +40,21 @@ package struct BigQueryLinkConfiguration: Codable, Equatable {
     /// BigQuery dataset location.
     package var datasetLocation: String?
 
+    /// Creates a BigQuery link configuration.
+    package init(
+        enabled: Bool? = nil,
+        projectNumber: String? = nil,
+        dailyExportEnabled: Bool? = nil,
+        streamingExportEnabled: Bool? = nil,
+        datasetLocation: String? = nil,
+    ) {
+        self.enabled = enabled
+        self.projectNumber = projectNumber
+        self.dailyExportEnabled = dailyExportEnabled
+        self.streamingExportEnabled = streamingExportEnabled
+        self.datasetLocation = datasetLocation
+    }
+
     enum CodingKeys: String, CodingKey {
         case enabled
         case projectNumber = "project_number"

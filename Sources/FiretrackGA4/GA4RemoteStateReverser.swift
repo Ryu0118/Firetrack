@@ -62,7 +62,21 @@ package enum GA4RemoteStateReverser {
 
     private static func ga4Sync(from remote: GA4RemoteState) -> GA4SyncConfiguration? {
         let keyEvents = remote.keyEvents.compactMap(\.eventName).sorted()
-        guard !keyEvents.isEmpty else { return nil }
-        return GA4SyncConfiguration(keyEvents: keyEvents)
+        let bigQueryLink = bigQueryLink(from: remote)
+        guard !keyEvents.isEmpty || bigQueryLink != nil else { return nil }
+        return GA4SyncConfiguration(
+            keyEvents: keyEvents.isEmpty ? nil : keyEvents,
+            bigQueryLink: bigQueryLink,
+        )
+    }
+
+    /// Reconstructs the BigQuery link config from the first remote link, if any.
+    /// `project` arrives as `projects/{number}`; the link is reported as enabled since it exists.
+    private static func bigQueryLink(from remote: GA4RemoteState) -> BigQueryLinkConfiguration? {
+        guard let project = remote.bigQueryLinks.compactMap(\.project).min() else { return nil }
+        let projectNumber = project.hasPrefix("projects/")
+            ? String(project.dropFirst("projects/".count))
+            : project
+        return BigQueryLinkConfiguration(enabled: true, projectNumber: projectNumber)
     }
 }
