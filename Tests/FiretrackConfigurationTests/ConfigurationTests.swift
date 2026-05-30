@@ -17,6 +17,19 @@ struct ConfigurationTests {
     }
 
     @Test
+    func serializeIsDeterministicAndRoundTrips() throws {
+        let configuration = try AnalyticsConfigurationLoader.load(yaml: validTrackingPlanYAML)
+
+        let first = try AnalyticsConfigurationSerializer.serialize(configuration)
+        let second = try AnalyticsConfigurationSerializer.serialize(configuration)
+        #expect(first == second)
+
+        // The emitted YAML parses back into an equal configuration.
+        let reloaded = try AnalyticsConfigurationLoader.load(yaml: first)
+        #expect(reloaded == configuration)
+    }
+
+    @Test
     func validationReportsDeterministicErrors() throws {
         let yaml = """
         version: 1
