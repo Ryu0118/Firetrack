@@ -17,31 +17,35 @@ Firetrack makes your analytics contract _executable_. Analytics rot the moment t
 
 ## Installation
 
-**Install script** — no toolchain needed:
-
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Ryu0118/Firetracker/main/install.sh | bash
 ```
 
-<details>
-<summary>Other methods (mise, nest, from source)</summary>
+### Other methods
+
+#### Nest ([mtj0928/nest](https://github.com/mtj0928/nest))
 
 ```bash
-# mise
-mise use -g ubi:Ryu0118/Firetracker[exe=firetrack]
-
-# nest — add to nestfile.yaml, then: nest bootstrap nestfile.yaml
-#   - reference: Ryu0118/Firetracker
-#     version: 0.1.0
-
-# from source (Swift 6.2, macOS 26+)
-git clone https://github.com/Ryu0118/Firetracker.git
-cd Firetracker && swift build -c release
+nest install Ryu0118/Firetracker
 ```
 
-</details>
+#### Mise ([jdx/mise](https://github.com/jdx/mise))
 
-Verify with `firetrack --version`. Requires **macOS 26+**.
+```bash
+mise use -g ubi:Ryu0118/Firetracker[exe=firetrack]
+```
+
+#### Build from source
+
+Requires Swift 6.2+ and macOS 26+.
+
+```bash
+git clone https://github.com/Ryu0118/Firetracker.git
+cd Firetracker
+swift build -c release
+```
+
+Verify with `firetrack --version`.
 
 ---
 
@@ -294,22 +298,7 @@ can install the CLI and adopt it in a project for you — set up `firetrack.yml`
 generate the Swift contract, and wire it into CI. Install it:
 
 ```bash
-# via skills CLI (https://github.com/vercel-labs/skills)
 npx skills add Ryu0118/Firetracker --skill firetracker -g
-
-# or download directly to ~/.agents/skills/ (Agent Skills standard)
-mkdir -p ~/.agents/skills/firetracker/references
-curl -fsSL https://raw.githubusercontent.com/Ryu0118/Firetracker/main/.agents/skills/firetracker/SKILL.md \
-  -o ~/.agents/skills/firetracker/SKILL.md
-curl -fsSL https://raw.githubusercontent.com/Ryu0118/Firetracker/main/.agents/skills/firetracker/references/yaml-schema.md \
-  -o ~/.agents/skills/firetracker/references/yaml-schema.md
-
-# for Claude Code: also install to ~/.claude/skills/
-mkdir -p ~/.claude/skills/firetracker/references
-curl -fsSL https://raw.githubusercontent.com/Ryu0118/Firetracker/main/.agents/skills/firetracker/SKILL.md \
-  -o ~/.claude/skills/firetracker/SKILL.md
-curl -fsSL https://raw.githubusercontent.com/Ryu0118/Firetracker/main/.agents/skills/firetracker/references/yaml-schema.md \
-  -o ~/.claude/skills/firetracker/references/yaml-schema.md
 ```
 
 Then tell your agent:
