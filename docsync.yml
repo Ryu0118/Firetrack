@@ -12,7 +12,7 @@ rules:
   doc: README.md
   message: "CLI command surface changed \u2014 update README (Commands / Quick start)
     if commands or flags changed."
-  checksum: 8b078d2c5cf65ee415276fb68317a2d54e53bf3be474614c56236f8deca81075
+  checksum: bde0f68706713b7c669c5711a562c0d5599d777424f3e498d494b5e26d769d56
 - name: readme-config
   sources:
   - Sources/FiretrackConfiguration/AnalyticsTrackingConfiguration.swift
@@ -22,7 +22,7 @@ rules:
   doc: README.md
   message: "Tracking-plan schema or validation rules changed \u2014 update README
     (The YAML contract) and the firetrack-adoption skill schema."
-  checksum: 25a7f0aa9853f2a8932394f08cc3ebaa9af321ea34e28e81e94b1850b0e3409c
+  checksum: 62d551aae5941ebe3aaa0e22d2f4e4c72f4e36b1805fe6031b13c84c90cb52a3
 - name: readme-codegen
   sources:
   - Sources/FiretrackSwiftGenerator/SwiftAnalyticsGenerator.swift
@@ -40,4 +40,4 @@ rules:
   doc: AGENTS.md
   message: "Module graph, logging setup, or entry point changed \u2014 update AGENTS.md
     (Architecture / Conventions)."
-  checksum: d39632f9f6fad6869087e46a9ffdfdf41329f3d227ed96263974aa92f5aecd92
+  checksum: 60b809cb97e198c7d5733775fc3638d0b15f4b027f28949dea9cb2b0f6e8e7e5

@@ -5,7 +5,7 @@ import Foundation
 struct ValidateCommand: ParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "validate",
-        abstract: "Validate an analytics tracking-plan YAML file.",
+        abstract: "Validate the tracking-plan file: schema, names, and rules (offline, no auth).",
     )
 
     @Option(name: .long, help: "Tracking plan YAML path.")
