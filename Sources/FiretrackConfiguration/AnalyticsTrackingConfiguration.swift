@@ -1,6 +1,6 @@
 import Foundation
 
-/// Root model for the `firetrack.yml` tracking plan.
+/// Root model for the `firetracker.yml` tracking plan.
 package struct AnalyticsTrackingConfiguration: Codable, Equatable {
     /// Schema version of the tracking plan.
     package var version: Int

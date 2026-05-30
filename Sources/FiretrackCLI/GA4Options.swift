@@ -3,8 +3,8 @@ import FiretrackOperations
 import Foundation
 
 struct GA4Options: ParsableArguments {
-    @Option(name: .customLong("config"), help: "Tracking-plan YAML path (default: ./firetrack.yml).")
-    var config: String = "firetrack.yml"
+    @Option(name: .customLong("config"), help: "Tracking-plan YAML path (default: ./firetracker.yml).")
+    var config: String = "firetracker.yml"
 
     @Option(name: .long, help: "GA4 property ID override.")
     var propertyID: String?

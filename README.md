@@ -7,7 +7,7 @@
 
 **Define your Firebase/GA4 analytics in YAML, generate type-safe Swift code & sync GA4 config.**
 
-Firetrack makes your analytics contract _executable_. Analytics rot the moment three things disagree: the tracking plan in a spreadsheet, the event names hardcoded in your app, and the custom dimensions configured by hand in the GA4 console. Firetrack makes `firetrack.yml` the single source of truth — it validates the contract, generates type-safe Swift event code, and pushes missing definitions into GA4 over the Admin API. Change the YAML, regenerate, sync. No console clicking, no typo'd event names, no drift.
+Firetrack makes your analytics contract _executable_. Analytics rot the moment three things disagree: the tracking plan in a spreadsheet, the event names hardcoded in your app, and the custom dimensions configured by hand in the GA4 console. Firetrack makes `firetracker.yml` the single source of truth — it validates the contract, generates type-safe Swift event code, and pushes missing definitions into GA4 over the Admin API. Change the YAML, regenerate, sync. No console clicking, no typo'd event names, no drift.
 
 ## Features
 
@@ -49,9 +49,27 @@ Verify with `firetrack --version`.
 
 ---
 
+## Agent Skills
+
+Firetrack ships a **`firetracker`** [Agent Skill](https://agentskills.io) so your AI agent
+can install the CLI and adopt it in a project for you — set up `firetracker.yml`,
+generate the Swift contract, and wire it into CI. Install it:
+
+```bash
+npx skills add Ryu0118/Firetracker --skill firetracker -g
+```
+
+Then tell your agent:
+
+```
+/firetracker set up an analytics tracking plan for my iOS app
+```
+
+---
+
 ## Quick start
 
-1. Write `firetrack.yml` at your project root:
+1. Write `firetracker.yml` at your project root:
 
    ```yaml
    version: 1
@@ -211,7 +229,7 @@ firetrack ga4 sync                      # create the missing GA4 resources (--dr
 firetrack doctor                        # diagnose GA4 readiness before sync (auth + property + token)
 ```
 
-Every command reads `firetrack.yml` from the current directory by default; pass
+Every command reads `firetracker.yml` from the current directory by default; pass
 `--config <path>` to point at a plan anywhere else.
 
 | Command | Key flags |
@@ -236,7 +254,7 @@ and an existing BigQuery link pointing at a different project is a hard error. P
 Only the GA4 commands (`ga4 diff`, `ga4 sync`, `doctor`) need credentials — `validate`
 and `generate` are fully offline.
 
-**No tokens or keys go in `firetrack.yml`.** The plan holds only identifiers (GA4
+**No tokens or keys go in `firetracker.yml`.** The plan holds only identifiers (GA4
 property ID, service-account email, BigQuery project number). The access token is
 resolved at runtime, in order:
 
@@ -270,24 +288,6 @@ Impersonation requests the `analytics.edit` and `analytics.readonly` scopes.
 ```
 
 The build fails if a plan change wasn't regenerated and committed.
-
----
-
-## Agent Skills
-
-Firetrack ships a **`firetracker`** [Agent Skill](https://agentskills.io) so your AI agent
-can install the CLI and adopt it in a project for you — set up `firetrack.yml`,
-generate the Swift contract, and wire it into CI. Install it:
-
-```bash
-npx skills add Ryu0118/Firetracker --skill firetracker -g
-```
-
-Then tell your agent:
-
-```
-/firetracker set up an analytics tracking plan for my iOS app
-```
 
 ---
 

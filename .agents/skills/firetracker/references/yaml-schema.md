@@ -1,4 +1,4 @@
-# firetrack.yml schema
+# firetracker.yml schema
 
 Complete reference for the Firetrack tracking-plan contract (`version: 1`).
 
