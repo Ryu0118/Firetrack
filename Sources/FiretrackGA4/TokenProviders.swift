@@ -63,7 +63,7 @@ package struct ImpersonatedAccessTokenProvider: AccessTokenProvider {
     package init(
         serviceAccount: String,
         baseProvider: any AccessTokenProvider = GcloudAccessTokenProvider(),
-        httpClient: any GA4HTTPClient = URLSessionGA4HTTPClient()
+        httpClient: any GA4HTTPClient = URLSessionGA4HTTPClient(),
     ) {
         self.serviceAccount = serviceAccount
         self.baseProvider = baseProvider
@@ -88,7 +88,7 @@ package struct ImpersonatedAccessTokenProvider: AccessTokenProvider {
                 method: "POST",
                 url: url.absoluteString,
                 statusCode: response.statusCode,
-                body: String(data: response.body, encoding: .utf8) ?? ""
+                body: String(data: response.body, encoding: .utf8) ?? "",
             )
         }
         do {

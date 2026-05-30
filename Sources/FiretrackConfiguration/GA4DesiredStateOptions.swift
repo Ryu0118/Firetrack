@@ -19,7 +19,7 @@ package struct GA4DesiredStateOptions: Equatable {
         bigQueryProjectNumberOverride: String? = nil,
         skipCustomDefinitions: Bool = false,
         skipKeyEvents: Bool = false,
-        skipBigQuery: Bool = false
+        skipBigQuery: Bool = false,
     ) {
         self.propertyIDOverride = propertyIDOverride
         self.bigQueryProjectNumberOverride = bigQueryProjectNumberOverride

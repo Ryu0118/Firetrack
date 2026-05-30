@@ -22,7 +22,7 @@ package struct AnalyticsParameterConfiguration: Codable, Equatable {
         allowed: [String]? = nil,
         ga4CustomDimension: Bool? = nil,
         ga4CustomMetric: Bool? = nil,
-        pii: Bool? = nil
+        pii: Bool? = nil,
     ) {
         self.type = type
         self.required = required
@@ -61,7 +61,7 @@ package extension AnalyticsParameterConfiguration {
             allowed: override.allowed ?? allowed,
             ga4CustomDimension: override.ga4CustomDimension ?? ga4CustomDimension,
             ga4CustomMetric: override.ga4CustomMetric ?? ga4CustomMetric,
-            pii: override.pii ?? pii
+            pii: override.pii ?? pii,
         )
     }
 }

@@ -5,7 +5,7 @@ import Foundation
 struct DoctorCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "doctor",
-        abstract: "Check local configuration and auth prerequisites."
+        abstract: "Check local configuration and auth prerequisites.",
     )
 
     @OptionGroup var options: GA4Options

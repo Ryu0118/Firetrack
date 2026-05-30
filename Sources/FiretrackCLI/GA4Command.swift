@@ -8,6 +8,6 @@ struct GA4Command: AsyncParsableCommand {
         subcommands: [
             GA4DiffCommand.self,
             GA4SyncCommand.self,
-        ]
+        ],
     )
 }

@@ -30,7 +30,7 @@ package struct GA4Request: Equatable {
         skipCustomDefinitions: Bool = false,
         skipKeyEvents: Bool = false,
         skipBigQuery: Bool = false,
-        apply: Bool = false
+        apply: Bool = false,
     ) {
         self.planPath = planPath
         self.propertyID = propertyID
@@ -55,7 +55,7 @@ package struct GenerateRequest: Equatable {
         planPath: String = "Documents/analytics-tracking-plan.yaml",
         outputPath: String,
         accessLevel: String = "internal",
-        overwrite: Bool = false
+        overwrite: Bool = false,
     ) {
         self.planPath = planPath
         self.outputPath = outputPath

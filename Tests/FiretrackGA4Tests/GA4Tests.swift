@@ -16,7 +16,7 @@ struct GA4Tests {
                     displayName: "Distance M",
                     description: "",
                     measurementUnit: "METERS",
-                    scope: "EVENT"
+                    scope: "EVENT",
                 ),
             ],
             keyEvents: [.init(eventName: "recording_completed", countingMethod: "ONCE_PER_EVENT")],
@@ -24,15 +24,15 @@ struct GA4Tests {
                 project: "projects/456",
                 dailyExportEnabled: true,
                 streamingExportEnabled: true,
-                datasetLocation: "US"
-            )
+                datasetLocation: "US",
+            ),
         )
 
         let remote = GA4RemoteState(
             customDimensions: [.init(name: nil, parameterName: "source")],
             customMetrics: [],
             keyEvents: [],
-            bigQueryLinks: []
+            bigQueryLinks: [],
         )
         let plan = try GA4SyncPlanner.plan(desired: desired, remote: remote)
 
@@ -44,7 +44,7 @@ struct GA4Tests {
         #expect(throws: (any Error).self) {
             try GA4SyncPlanner.plan(
                 desired: desired,
-                remote: .init(bigQueryLinks: [.init(name: nil, project: "projects/999")])
+                remote: .init(bigQueryLinks: [.init(name: nil, project: "projects/999")]),
             )
         }
     }
@@ -60,12 +60,12 @@ struct GA4Tests {
                 #"{"bigqueryLinks":[]}"#,
                 #"{"error":{"status":"ALREADY_EXISTS"}}"#,
             ],
-            statusCodes: [200, 200, 200, 200, 200, 409]
+            statusCodes: [200, 200, 200, 200, 200, 409],
         )
         let client = GA4AdminClient(
             httpClient: http,
             betaBaseURL: URL(string: "https://example.com/v1beta"),
-            alphaBaseURL: URL(string: "https://example.com/v1alpha")
+            alphaBaseURL: URL(string: "https://example.com/v1alpha"),
         )
 
         let remote = try await client.remoteState(propertyID: "123", token: "token", includeBigQuery: true)
@@ -78,10 +78,10 @@ struct GA4Tests {
                 ],
                 missingCustomMetrics: [],
                 missingKeyEvents: [],
-                missingBigQueryLinks: []
+                missingBigQueryLinks: [],
             ),
             propertyID: "123",
-            token: "token"
+            token: "token",
         )
         #expect(http.requests.count == 6)
         #expect(http.requests[1].url.absoluteString.contains("pageToken=next"))
@@ -102,7 +102,7 @@ private final class FakeHTTPClient: GA4HTTPClient, @unchecked Sendable {
         requests.append(request)
         return .init(
             statusCode: statusCodes.removeFirst(),
-            body: Data(responses.removeFirst().utf8)
+            body: Data(responses.removeFirst().utf8),
         )
     }
 }

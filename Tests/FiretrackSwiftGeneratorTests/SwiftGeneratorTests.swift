@@ -37,7 +37,7 @@ struct SwiftGeneratorTests {
         #expect(first == second)
         #expect(!Parser.parse(source: first).hasError)
         #expect(first.contains(
-            "case recordingCompleted(distanceM: Double, durationSec: Int?, source: SourceValue)"
+            "case recordingCompleted(distanceM: Double, durationSec: Int?, source: SourceValue)",
         ))
         #expect(first.contains("case driveRecordScreen = \"DriveRecordScreen\""))
     }

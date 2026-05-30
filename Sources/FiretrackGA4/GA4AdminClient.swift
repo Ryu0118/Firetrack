@@ -16,7 +16,7 @@ package struct GA4AdminClient {
     package init(
         httpClient: any GA4HTTPClient = URLSessionGA4HTTPClient(),
         betaBaseURL: URL? = URL(string: "https://analyticsadmin.googleapis.com/v1beta"),
-        alphaBaseURL: URL? = URL(string: "https://analyticsadmin.googleapis.com/v1alpha")
+        alphaBaseURL: URL? = URL(string: "https://analyticsadmin.googleapis.com/v1alpha"),
     ) {
         guard let betaBaseURL, let alphaBaseURL else {
             preconditionFailure("Invalid GA4 Admin API base URL")
@@ -38,7 +38,7 @@ package struct GA4AdminClient {
             customDimensions: dimensions,
             customMetrics: metrics,
             keyEvents: keyEvents,
-            bigQueryLinks: links
+            bigQueryLinks: links,
         )
     }
 
@@ -50,7 +50,7 @@ package struct GA4AdminClient {
                 propertyID: propertyID,
                 collection: "customDimensions",
                 payload: payload,
-                token: token
+                token: token,
             )
         }
         for payload in plan.missingCustomMetrics {
@@ -59,7 +59,7 @@ package struct GA4AdminClient {
                 propertyID: propertyID,
                 collection: "customMetrics",
                 payload: payload,
-                token: token
+                token: token,
             )
         }
         for payload in plan.missingKeyEvents {
@@ -68,7 +68,7 @@ package struct GA4AdminClient {
                 propertyID: propertyID,
                 collection: "keyEvents",
                 payload: payload,
-                token: token
+                token: token,
             )
         }
         for payload in plan.missingBigQueryLinks {
@@ -77,7 +77,7 @@ package struct GA4AdminClient {
                 propertyID: propertyID,
                 collection: "bigQueryLinks",
                 payload: payload,
-                token: token
+                token: token,
             )
         }
     }
@@ -88,7 +88,7 @@ package struct GA4AdminClient {
             propertyID: propertyID,
             collection: "customDimensions",
             token: token,
-            responseKeyPath: \CustomDimensionsResponse.customDimensions
+            responseKeyPath: \CustomDimensionsResponse.customDimensions,
         )
     }
 
@@ -98,7 +98,7 @@ package struct GA4AdminClient {
             propertyID: propertyID,
             collection: "customMetrics",
             token: token,
-            responseKeyPath: \CustomMetricsResponse.customMetrics
+            responseKeyPath: \CustomMetricsResponse.customMetrics,
         )
     }
 
@@ -108,7 +108,7 @@ package struct GA4AdminClient {
             propertyID: propertyID,
             collection: "keyEvents",
             token: token,
-            responseKeyPath: \KeyEventsResponse.keyEvents
+            responseKeyPath: \KeyEventsResponse.keyEvents,
         )
     }
 
@@ -118,7 +118,7 @@ package struct GA4AdminClient {
             propertyID: propertyID,
             collection: "bigQueryLinks",
             token: token,
-            responseKeyPath: \BigQueryLinksResponse.bigqueryLinks
+            responseKeyPath: \BigQueryLinksResponse.bigqueryLinks,
         )
     }
 
@@ -127,7 +127,7 @@ package struct GA4AdminClient {
         propertyID: String,
         collection: String,
         token: String,
-        responseKeyPath: KeyPath<Response, [Item]?>
+        responseKeyPath: KeyPath<Response, [Item]?>,
     ) async throws -> [Item] {
         var results: [Item] = []
         var pageToken: String?
@@ -136,7 +136,7 @@ package struct GA4AdminClient {
                 pathBase: pathBase,
                 propertyID: propertyID,
                 collection: collection,
-                pageToken: pageToken
+                pageToken: pageToken,
             )
             let data = try await request(.get, url: url, token: token, body: Data?.none)
             do {
@@ -147,19 +147,19 @@ package struct GA4AdminClient {
                 throw GA4SyncError.invalidJSON(
                     method: "GET",
                     url: url.absoluteString,
-                    message: error.localizedDescription
+                    message: error.localizedDescription,
                 )
             }
         } while pageToken?.isEmpty == false
         return results
     }
 
-    private func create<Payload: Encodable>(
+    private func create(
         pathBase: URL,
         propertyID: String,
         collection: String,
-        payload: Payload,
-        token: String
+        payload: some Encodable,
+        token: String,
     ) async throws {
         let url = try resourceURL(pathBase: pathBase, propertyID: propertyID, collection: collection, pageToken: nil)
         let body = try encoder.encode(payload)
@@ -183,7 +183,7 @@ package struct GA4AdminClient {
                 method: method.rawValue,
                 url: url.absoluteString,
                 statusCode: response.statusCode,
-                body: String(data: response.body, encoding: .utf8) ?? ""
+                body: String(data: response.body, encoding: .utf8) ?? "",
             )
         }
         return response.body.isEmpty ? Data("{}".utf8) : response.body
@@ -196,7 +196,7 @@ package struct GA4AdminClient {
             .appending(path: collection)
         guard var components = URLComponents(
             url: baseURL,
-            resolvingAgainstBaseURL: false
+            resolvingAgainstBaseURL: false,
         ) else {
             throw GA4SyncError.invalidURL(baseURL.absoluteString)
         }

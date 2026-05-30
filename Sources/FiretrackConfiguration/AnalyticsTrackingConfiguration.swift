@@ -25,7 +25,7 @@ package struct AnalyticsTrackingConfiguration: Codable, Equatable {
         ga4Sync: GA4SyncConfiguration? = nil,
         globalParameters: [String: AnalyticsParameterConfiguration] = [:],
         screens: [String: AnalyticsScreenConfiguration] = [:],
-        events: [String: AnalyticsEventConfiguration] = [:]
+        events: [String: AnalyticsEventConfiguration] = [:],
     ) {
         self.version = version
         self.platforms = platforms
@@ -55,7 +55,7 @@ package struct AnalyticsTrackingConfiguration: Codable, Equatable {
         ga4Sync = try container.decodeIfPresent(GA4SyncConfiguration.self, forKey: .ga4Sync)
         globalParameters = try container.decodeIfPresent(
             [String: AnalyticsParameterConfiguration].self,
-            forKey: .globalParameters
+            forKey: .globalParameters,
         ) ?? [:]
         screens = try container.decodeIfPresent([String: AnalyticsScreenConfiguration].self, forKey: .screens) ?? [:]
         events = try container.decodeIfPresent([String: AnalyticsEventConfiguration].self, forKey: .events) ?? [:]

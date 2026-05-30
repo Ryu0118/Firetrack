@@ -5,7 +5,7 @@ import Foundation
 struct GA4DiffCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "diff",
-        abstract: "Read GA4 remote state and print missing resources."
+        abstract: "Read GA4 remote state and print missing resources.",
     )
 
     @OptionGroup var options: GA4Options

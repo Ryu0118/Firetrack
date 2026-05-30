@@ -5,7 +5,7 @@ import Foundation
 struct GenerateCommand: ParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "generate",
-        abstract: "Generate a Swift analytics contract from YAML."
+        abstract: "Generate a Swift analytics contract from YAML.",
     )
 
     @Option(name: .long, help: "Tracking plan YAML path.")
@@ -27,7 +27,7 @@ struct GenerateCommand: ParsableCommand {
             planPath: plan,
             outputPath: output,
             accessLevel: accessLevel,
-            overwrite: overwrite
+            overwrite: overwrite,
         ))
     }
 }

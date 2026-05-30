@@ -16,7 +16,7 @@ package struct GA4DesiredState: Equatable {
         customDimensions: [GA4CustomDimension],
         customMetrics: [GA4CustomMetric],
         keyEvents: [GA4KeyEvent],
-        bigQueryLink: GA4BigQueryLink?
+        bigQueryLink: GA4BigQueryLink?,
     ) {
         self.customDimensions = customDimensions
         self.customMetrics = customMetrics

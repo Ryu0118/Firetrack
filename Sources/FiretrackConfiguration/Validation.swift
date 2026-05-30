@@ -28,7 +28,7 @@ package struct AnalyticsConfigurationValidationReport: Equatable {
 package enum AnalyticsConfigurationValidator {
     /// Validates a tracking-plan configuration.
     package static func validate(
-        _ configuration: AnalyticsTrackingConfiguration
+        _ configuration: AnalyticsTrackingConfiguration,
     ) -> AnalyticsConfigurationValidationReport {
         var errors: [AnalyticsConfigurationValidationError] = []
         var parameterTypes: [String: AnalyticsParameterType] = [:]
@@ -46,14 +46,14 @@ package enum AnalyticsConfigurationValidator {
                     parameter,
                     name: parameterName,
                     path: path,
-                    errors: &errors
+                    errors: &errors,
                 )
                 validateCompatibleType(
                     parameter.type,
                     name: parameterName,
                     path: "\(path).type",
                     seen: &parameterTypes,
-                    errors: &errors
+                    errors: &errors,
                 )
             }
         }
@@ -65,7 +65,7 @@ package enum AnalyticsConfigurationValidator {
                 name: parameterName,
                 path: "global_parameters.\(parameterName).type",
                 seen: &parameterTypes,
-                errors: &errors
+                errors: &errors,
             )
         }
 
@@ -99,7 +99,7 @@ package enum AnalyticsConfigurationValidator {
         _ parameter: AnalyticsParameterConfiguration,
         name: String,
         path: String,
-        errors: inout [AnalyticsConfigurationValidationError]
+        errors: inout [AnalyticsConfigurationValidationError],
     ) {
         validateName(name, kind: "parameter", path: path, errors: &errors)
         if parameter.pii == true {
@@ -119,7 +119,7 @@ package enum AnalyticsConfigurationValidator {
         _ name: String,
         kind: String,
         path: String,
-        errors: inout [AnalyticsConfigurationValidationError]
+        errors: inout [AnalyticsConfigurationValidationError],
     ) {
         if !isSnakeCase(name) {
             errors.append(.init(path: path, message: "\(kind) must be snake_case"))
@@ -134,12 +134,12 @@ package enum AnalyticsConfigurationValidator {
         name: String,
         path: String,
         seen: inout [String: AnalyticsParameterType],
-        errors: inout [AnalyticsConfigurationValidationError]
+        errors: inout [AnalyticsConfigurationValidationError],
     ) {
         if let previous = seen[name], previous != type {
             errors.append(.init(
                 path: path,
-                message: "parameter redefines \(name) as \(type.rawValue), previously \(previous.rawValue)"
+                message: "parameter redefines \(name) as \(type.rawValue), previously \(previous.rawValue)",
             ))
         } else {
             seen[name] = type
@@ -148,34 +148,34 @@ package enum AnalyticsConfigurationValidator {
 
     private static func validateSyncRequiredFields(
         _ configuration: AnalyticsTrackingConfiguration,
-        errors: inout [AnalyticsConfigurationValidationError]
+        errors: inout [AnalyticsConfigurationValidationError],
     ) {
         validateNoTODO(
             configuration.destinations?.ga4?.propertyID,
             path: "destinations.ga4.property_id",
-            errors: &errors
+            errors: &errors,
         )
         validateNoTODO(
             configuration.destinations?.bigquery?.projectNumber,
             path: "destinations.bigquery.project_number",
-            errors: &errors
+            errors: &errors,
         )
         validateNoTODO(
             configuration.ga4Sync?.impersonateServiceAccount,
             path: "ga4_sync.impersonate_service_account",
-            errors: &errors
+            errors: &errors,
         )
         validateNoTODO(
             configuration.ga4Sync?.bigQueryLink?.projectNumber,
             path: "ga4_sync.bigquery_link.project_number",
-            errors: &errors
+            errors: &errors,
         )
     }
 
     private static func validateNoTODO(
         _ value: String?,
         path: String,
-        errors: inout [AnalyticsConfigurationValidationError]
+        errors: inout [AnalyticsConfigurationValidationError],
     ) {
         if value?.trimmingCharacters(in: .whitespacesAndNewlines) == "TODO" {
             errors.append(.init(path: path, message: "TODO must be replaced before sync"))

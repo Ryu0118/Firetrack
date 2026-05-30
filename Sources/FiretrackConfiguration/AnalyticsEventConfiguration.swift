@@ -31,7 +31,7 @@ package struct AnalyticsEventConfiguration: Codable, Equatable {
         owner: String? = nil,
         retentionAnchor: Bool? = nil,
         pii: Bool? = nil,
-        parameters: [String: AnalyticsParameterConfiguration] = [:]
+        parameters: [String: AnalyticsParameterConfiguration] = [:],
     ) {
         self.description = description
         self.fireWhen = fireWhen
@@ -51,7 +51,7 @@ package struct AnalyticsEventConfiguration: Codable, Equatable {
         pii = try container.decodeIfPresent(Bool.self, forKey: .pii)
         parameters = try container.decodeIfPresent(
             [String: AnalyticsParameterConfiguration].self,
-            forKey: .parameters
+            forKey: .parameters,
         ) ?? [:]
     }
 }

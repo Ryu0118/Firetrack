@@ -17,7 +17,7 @@ package struct GA4RemoteState: Equatable {
         customDimensions: [RemoteCustomDefinition] = [],
         customMetrics: [RemoteCustomDefinition] = [],
         keyEvents: [RemoteKeyEvent] = [],
-        bigQueryLinks: [RemoteBigQueryLink] = []
+        bigQueryLinks: [RemoteBigQueryLink] = [],
     ) {
         self.customDimensions = customDimensions
         self.customMetrics = customMetrics
@@ -66,7 +66,7 @@ package struct GA4SyncPlan: Equatable {
         missingCustomDimensions: [GA4CustomDimension],
         missingCustomMetrics: [GA4CustomMetric],
         missingKeyEvents: [GA4KeyEvent],
-        missingBigQueryLinks: [GA4BigQueryLink]
+        missingBigQueryLinks: [GA4BigQueryLink],
     ) {
         self.missingCustomDimensions = missingCustomDimensions
         self.missingCustomMetrics = missingCustomMetrics
@@ -109,7 +109,7 @@ package enum GA4SyncPlanner {
             },
             missingCustomMetrics: desired.customMetrics.filter { !existingMetricNames.contains($0.parameterName) },
             missingKeyEvents: desired.keyEvents.filter { !existingEventNames.contains($0.eventName) },
-            missingBigQueryLinks: missingLinks
+            missingBigQueryLinks: missingLinks,
         )
     }
 }

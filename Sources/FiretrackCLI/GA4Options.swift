@@ -35,7 +35,7 @@ struct GA4Options: ParsableArguments {
             skipCustomDefinitions: skipCustomDefinitions,
             skipKeyEvents: skipKeyEvents,
             skipBigQuery: skipBigQuery,
-            apply: apply
+            apply: apply,
         )
     }
 }

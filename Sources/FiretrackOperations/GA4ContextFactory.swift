@@ -14,7 +14,7 @@ enum GA4ContextFactory {
         try ConfigurationValidationGate.validate(configuration)
         guard let propertyID = GA4DesiredStateExtractor.propertyID(
             from: configuration,
-            override: request.propertyID
+            override: request.propertyID,
         ) else {
             throw GA4SyncError.missingPropertyID
         }
@@ -25,17 +25,17 @@ enum GA4ContextFactory {
                 bigQueryProjectNumberOverride: request.bigQueryProjectNumber,
                 skipCustomDefinitions: request.skipCustomDefinitions,
                 skipKeyEvents: request.skipKeyEvents,
-                skipBigQuery: request.skipBigQuery
-            )
+                skipBigQuery: request.skipBigQuery,
+            ),
         )
         let serviceAccount = GA4DesiredStateExtractor.impersonatedServiceAccount(
             from: configuration,
-            override: request.impersonateServiceAccount
+            override: request.impersonateServiceAccount,
         )
         return GA4Context(
             propertyID: propertyID,
             desired: desired,
-            tokenProvider: tokenProvider(serviceAccount: serviceAccount)
+            tokenProvider: tokenProvider(serviceAccount: serviceAccount),
         )
     }
 

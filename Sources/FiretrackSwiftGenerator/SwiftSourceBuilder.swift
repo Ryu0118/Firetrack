@@ -3,7 +3,7 @@ import Foundation
 @resultBuilder
 enum SwiftSourceBuilder {
     static func buildBlock(_ components: [String]...) -> [String] {
-        components.flatMap { $0 }
+        components.flatMap(\.self)
     }
 
     static func buildExpression(_ expression: String) -> [String] {
@@ -15,7 +15,7 @@ enum SwiftSourceBuilder {
     }
 
     static func buildArray(_ components: [[String]]) -> [String] {
-        components.flatMap { $0 }
+        components.flatMap(\.self)
     }
 
     static func buildOptional(_ component: [String]?) -> [String] {
