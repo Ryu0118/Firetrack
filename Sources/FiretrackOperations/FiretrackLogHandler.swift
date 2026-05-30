@@ -30,19 +30,11 @@ public struct FiretrackLogHandler: LogHandler {
         set { metadata[key] = newValue }
     }
 
-    /// Writes the message to stdout or stderr based on its level, with a trailing newline.
-    public func log(
-        level: Logger.Level,
-        message: Logger.Message,
-        metadata _: Logger.Metadata?,
-        source _: String,
-        file _: String,
-        function _: String,
-        line _: UInt,
-    ) {
-        let line = "\(message)\n"
+    /// Writes the event's message to stdout or stderr based on its level, with a trailing newline.
+    public func log(event: LogEvent) {
+        let line = "\(event.message)\n"
         guard let data = line.data(using: .utf8) else { return }
-        let handle = level >= .warning ? FileHandle.standardError : FileHandle.standardOutput
+        let handle = event.level >= .warning ? FileHandle.standardError : FileHandle.standardOutput
         handle.write(data)
     }
 }
