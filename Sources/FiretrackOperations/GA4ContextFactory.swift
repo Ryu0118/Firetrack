@@ -39,7 +39,7 @@ enum GA4ContextFactory {
         )
     }
 
-    private static func tokenProvider(serviceAccount: String?) -> any AccessTokenProvider {
+    static func tokenProvider(serviceAccount: String?) -> any AccessTokenProvider {
         // Process environment wins; .env in the working directory fills any gaps.
         let environment = DotEnv.mergedEnvironment()
         if let serviceAccount {

@@ -11,6 +11,7 @@ package struct FiretrackCommand: AsyncParsableCommand {
         version: FiretrackVersion.current,
         subcommands: [
             InitCommand.self,
+            PullCommand.self,
             ValidateCommand.self,
             GA4Command.self,
             GenerateCommand.self,
