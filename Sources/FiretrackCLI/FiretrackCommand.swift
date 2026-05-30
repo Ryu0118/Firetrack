@@ -10,6 +10,7 @@ package struct FiretrackCommand: AsyncParsableCommand {
         abstract: "Deterministic Firebase Analytics and GA4 tracking-plan tooling.",
         version: FiretrackVersion.current,
         subcommands: [
+            InitCommand.self,
             ValidateCommand.self,
             GA4Command.self,
             GenerateCommand.self,

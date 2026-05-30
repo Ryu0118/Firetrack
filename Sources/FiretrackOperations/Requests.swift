@@ -43,6 +43,39 @@ package struct GA4Request: Equatable {
     }
 }
 
+/// Request for scaffolding a new tracking-plan YAML file.
+package struct InitRequest: Equatable {
+    var outputPath: String
+    var overwrite: Bool
+
+    /// Creates a plan-scaffold request.
+    package init(outputPath: String = "firetrack.yml", overwrite: Bool = false) {
+        self.outputPath = outputPath
+        self.overwrite = overwrite
+    }
+}
+
+/// Request for pulling remote GA4 state into a tracking-plan YAML file.
+package struct PullRequest: Equatable {
+    var outputPath: String
+    var propertyID: String?
+    var impersonateServiceAccount: String?
+    var overwrite: Bool
+
+    /// Creates a GA4 pull request.
+    package init(
+        outputPath: String = "firetrack.yml",
+        propertyID: String? = nil,
+        impersonateServiceAccount: String? = nil,
+        overwrite: Bool = false,
+    ) {
+        self.outputPath = outputPath
+        self.propertyID = propertyID
+        self.impersonateServiceAccount = impersonateServiceAccount
+        self.overwrite = overwrite
+    }
+}
+
 /// Request for generating a Swift analytics contract.
 package struct GenerateRequest: Equatable {
     var planPath: String
