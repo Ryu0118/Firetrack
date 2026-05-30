@@ -22,7 +22,7 @@ package struct GA4SyncRunner {
             includeBigQuery: context.desired.bigQueryLink != nil,
         )
         let plan = try GA4SyncPlanner.plan(desired: context.desired, remote: remote)
-        GA4OutputFormatter.printPlan(plan)
+        GA4OutputFormatter.emitPlan(plan)
         if request.apply {
             try await client.apply(plan: plan, propertyID: context.propertyID, token: token)
         } else {

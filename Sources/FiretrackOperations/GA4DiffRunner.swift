@@ -23,11 +23,11 @@ package struct GA4DiffRunner {
                 includeBigQuery: context.desired.bigQueryLink != nil,
             )
             let plan = try GA4SyncPlanner.plan(desired: context.desired, remote: remote)
-            GA4OutputFormatter.printPlan(plan)
+            GA4OutputFormatter.emitPlan(plan)
             logger.info("\nDry-run only. Re-run with ga4 sync --apply to create missing resources.")
         } catch {
             logger.error("\nRemote diff unavailable: \(error)")
-            GA4OutputFormatter.printDesired(context.desired)
+            GA4OutputFormatter.emitDesired(context.desired)
             logger.info("\nDry-run only. Remote state was not changed.")
         }
     }
