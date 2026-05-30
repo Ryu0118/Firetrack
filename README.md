@@ -14,7 +14,6 @@ Firetrack makes your analytics contract _executable_. Analytics rot the moment t
 - 🦺 **Type-safe events that can't lie** — generated Swift enums turn a mistyped event name into a compile error, and the codegen parses its own output with SwiftSyntax before writing, so it never emits Swift that wouldn't compile
 - 📋 **One contract, zero drift** — events, parameters, and GA4 dimensions flow from one YAML file; a parameter reused across events must agree on its type and allowed values, or `validate` fails — a guarantee a spreadsheet plan can't make
 - ☁️ **Hands-off GA4 setup** — `ga4 sync` creates the matching custom dimensions, metrics, key events, and BigQuery links over the Admin API; no console clicking, and it only ever creates, never deletes
-- 🔒 **Drift fails the build** — run `generate` + `git diff --exit-code` in CI and a plan change that wasn't regenerated stops the pipeline, not your data
 
 ## Installation
 
@@ -276,19 +275,6 @@ firetrack ga4 sync
 ```
 
 Impersonation requests the `analytics.edit` and `analytics.readonly` scopes.
-
----
-
-## CI integration
-
-```yaml
-- run: firetrack validate
-- run: |
-    firetrack generate --output Sources/Analytics/GeneratedAnalytics.swift --overwrite
-    git diff --exit-code Sources/Analytics/GeneratedAnalytics.swift
-```
-
-The build fails if a plan change wasn't regenerated and committed.
 
 ---
 
