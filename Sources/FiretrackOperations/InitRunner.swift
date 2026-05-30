@@ -8,17 +8,9 @@ package struct InitRunner {
 
     /// Writes a starter tracking-plan YAML, refusing to clobber an existing file.
     package func run(_ request: InitRequest) throws {
-        let outputURL = URL(filePath: request.outputPath)
-        let outputPath = outputURL.path(percentEncoded: false)
-        if FileManager.default.fileExists(atPath: outputPath), !request.overwrite {
-            throw OperationsError.outputExists(outputPath)
-        }
-        let directory = outputURL.deletingLastPathComponent()
-        if !directory.path(percentEncoded: false).isEmpty {
-            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        }
+        let outputURL = try FileGuard.prepareOutput(request.outputPath, overwrite: request.overwrite)
         try Self.template.write(to: outputURL, atomically: true, encoding: .utf8)
-        logger.info("Wrote starter tracking plan: \(outputPath)")
+        logger.info("Wrote starter tracking plan: \(outputURL.path(percentEncoded: false))")
     }
 
     /// Minimal, valid starter plan. Event names use the object_action convention

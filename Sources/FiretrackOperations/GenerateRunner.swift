@@ -14,20 +14,12 @@ package struct GenerateRunner {
         guard let accessLevel = SwiftAccessLevel(rawValue: request.accessLevel) else {
             throw OperationsError.invalidAccessLevel(request.accessLevel)
         }
-        let outputURL = URL(filePath: request.outputPath)
-        let outputPath = outputURL.path(percentEncoded: false)
-        if FileManager.default.fileExists(atPath: outputPath), !request.overwrite {
-            throw OperationsError.outputExists(outputPath)
-        }
+        let outputURL = try FileGuard.prepareOutput(request.outputPath, overwrite: request.overwrite)
         let source = try SwiftAnalyticsGenerator().generate(
             configuration: configuration,
             options: .init(accessLevel: accessLevel),
         )
-        try FileManager.default.createDirectory(
-            at: outputURL.deletingLastPathComponent(),
-            withIntermediateDirectories: true,
-        )
         try source.write(to: outputURL, atomically: true, encoding: .utf8)
-        logger.info("Generated Swift analytics contract: \(outputPath)")
+        logger.info("Generated Swift analytics contract: \(outputURL.path(percentEncoded: false))")
     }
 }
