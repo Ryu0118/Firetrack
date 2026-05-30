@@ -48,8 +48,11 @@ package enum GA4DesiredStateExtractor {
         _ configuration: AnalyticsTrackingConfiguration,
     ) -> [String: AnalyticsParameterConfiguration] {
         var definitions = configuration.globalParameters
-        for event in configuration.events.values {
-            for (parameterName, parameter) in event.parameters {
+        // Iterate events in a stable order so merging is deterministic. Validation already
+        // rejects same-named parameters that disagree across events, so order only guards
+        // against any path that reaches here without validation.
+        for (_, event) in configuration.events.sorted(by: { $0.key < $1.key }) {
+            for (parameterName, parameter) in event.parameters.sorted(by: { $0.key < $1.key }) {
                 definitions[parameterName] = definitions[parameterName]?.merging(parameter) ?? parameter
             }
         }
@@ -90,7 +93,7 @@ package enum GA4DesiredStateExtractor {
                 GA4CustomDimension(
                     parameterName: name,
                     displayName: humanize(name),
-                    description: "MyApp analytics parameter: \(name)",
+                    description: "Firetrack analytics parameter: \(name)",
                     scope: "EVENT",
                 )
             }
@@ -107,7 +110,7 @@ package enum GA4DesiredStateExtractor {
                 GA4CustomMetric(
                     parameterName: name,
                     displayName: humanize(name),
-                    description: "MyApp analytics metric: \(name)",
+                    description: "Firetrack analytics metric: \(name)",
                     measurementUnit: measurementUnit(name),
                     scope: "EVENT",
                 )

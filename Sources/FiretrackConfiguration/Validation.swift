@@ -31,7 +31,7 @@ package enum AnalyticsConfigurationValidator {
         _ configuration: AnalyticsTrackingConfiguration,
     ) -> AnalyticsConfigurationValidationReport {
         var errors: [AnalyticsConfigurationValidationError] = []
-        var parameterTypes: [String: AnalyticsParameterType] = [:]
+        var seenParameters: [String: AnalyticsParameterConfiguration] = [:]
 
         for (eventName, event) in configuration.events.sorted(by: { $0.key < $1.key }) {
             validateName(eventName, kind: "event", path: "events.\(eventName)", errors: &errors)
@@ -48,11 +48,11 @@ package enum AnalyticsConfigurationValidator {
                     path: path,
                     errors: &errors,
                 )
-                validateCompatibleType(
-                    parameter.type,
+                validateConsistentDefinition(
+                    parameter,
                     name: parameterName,
-                    path: "\(path).type",
-                    seen: &parameterTypes,
+                    path: path,
+                    seen: &seenParameters,
                     errors: &errors,
                 )
             }
@@ -60,13 +60,6 @@ package enum AnalyticsConfigurationValidator {
 
         for (parameterName, parameter) in configuration.globalParameters.sorted(by: { $0.key < $1.key }) {
             validateParameter(parameter, name: parameterName, path: "global_parameters.\(parameterName)", errors: &errors)
-            validateCompatibleType(
-                parameter.type,
-                name: parameterName,
-                path: "global_parameters.\(parameterName).type",
-                seen: &parameterTypes,
-                errors: &errors,
-            )
         }
 
         for keyEvent in configuration.ga4Sync?.keyEvents ?? [] {
@@ -129,20 +122,44 @@ package enum AnalyticsConfigurationValidator {
         }
     }
 
-    private static func validateCompatibleType(
-        _ type: AnalyticsParameterType,
+    /// Ensures every occurrence of a parameter name agrees on the attributes that drive
+    /// code generation and GA4 sync. Without this, cross-event merging in
+    /// `GA4DesiredStateExtractor.parameterDefinitions` would be order-dependent and make
+    /// generated output non-deterministic.
+    private static func validateConsistentDefinition(
+        _ parameter: AnalyticsParameterConfiguration,
         name: String,
         path: String,
-        seen: inout [String: AnalyticsParameterType],
+        seen: inout [String: AnalyticsParameterConfiguration],
         errors: inout [AnalyticsConfigurationValidationError],
     ) {
-        if let previous = seen[name], previous != type {
+        guard let previous = seen[name] else {
+            seen[name] = parameter
+            return
+        }
+        if previous.type != parameter.type {
             errors.append(.init(
-                path: path,
-                message: "parameter redefines \(name) as \(type.rawValue), previously \(previous.rawValue)",
+                path: "\(path).type",
+                message: "parameter redefines \(name) as \(parameter.type.rawValue), previously \(previous.type.rawValue)",
             ))
-        } else {
-            seen[name] = type
+        }
+        if previous.allowed != parameter.allowed {
+            errors.append(.init(
+                path: "\(path).allowed",
+                message: "parameter \(name) has conflicting allowed values across definitions",
+            ))
+        }
+        if previous.ga4CustomDimension != parameter.ga4CustomDimension {
+            errors.append(.init(
+                path: "\(path).ga4_custom_dimension",
+                message: "parameter \(name) has conflicting ga4_custom_dimension across definitions",
+            ))
+        }
+        if previous.ga4CustomMetric != parameter.ga4CustomMetric {
+            errors.append(.init(
+                path: "\(path).ga4_custom_metric",
+                message: "parameter \(name) has conflicting ga4_custom_metric across definitions",
+            ))
         }
     }
 
