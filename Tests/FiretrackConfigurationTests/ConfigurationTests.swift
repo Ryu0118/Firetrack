@@ -22,7 +22,6 @@ struct ConfigurationTests {
         version: 1
         events:
           BadEvent:
-            pii: true
             parameters:
               ga_bad:
                 type: string
@@ -38,12 +37,78 @@ struct ConfigurationTests {
         let errors = AnalyticsConfigurationValidator.validate(configuration).errors.map(\.description)
 
         #expect(errors.contains { $0.contains("events.BadEvent: event must be snake_case") })
-        #expect(errors.contains { $0.contains("pii: true is not supported") })
         #expect(errors.contains { $0.contains("parameter uses a reserved prefix") })
         #expect(errors.contains { $0.contains("custom metrics must be int or double") })
         #expect(errors.contains { $0.contains("allowed enum values must be snake_case") })
         #expect(errors.contains { $0.contains("key event must exist in events") })
         #expect(errors == errors.sorted())
+    }
+
+    @Test
+    func piiParameterCannotBecomeGA4ReportingConfig() throws {
+        let yaml = """
+        version: 1
+        events:
+          search_performed:
+            parameters:
+              query_text:
+                type: string
+                pii: true
+                ga4_custom_dimension: true
+              result_count:
+                type: int
+                pii: true
+                ga4_custom_metric: true
+        """
+
+        let configuration = try AnalyticsConfigurationLoader.load(yaml: yaml)
+        let errors = AnalyticsConfigurationValidator.validate(configuration).errors.map(\.description)
+
+        #expect(errors.contains { $0.contains("query_text.ga4_custom_dimension") && $0.contains("PII parameter") })
+        #expect(errors.contains { $0.contains("result_count.ga4_custom_metric") && $0.contains("PII parameter") })
+        #expect(errors == errors.sorted())
+    }
+
+    @Test
+    func eventLevelPIIPropagatesToEveryParameter() throws {
+        let yaml = """
+        version: 1
+        events:
+          profile_viewed:
+            pii: true
+            parameters:
+              viewer_role:
+                type: enum
+                allowed: [self, other]
+                ga4_custom_dimension: true
+        """
+
+        let configuration = try AnalyticsConfigurationLoader.load(yaml: yaml)
+        let errors = AnalyticsConfigurationValidator.validate(configuration).errors.map(\.description)
+
+        #expect(errors.contains { $0.contains("viewer_role.ga4_custom_dimension") && $0.contains("PII parameter") })
+    }
+
+    @Test
+    func piiParameterWithoutGA4RegistrationIsValid() throws {
+        let yaml = """
+        version: 1
+        events:
+          note_saved:
+            pii: true
+            parameters:
+              note_body:
+                type: string
+                pii: true
+          recording_completed:
+            parameters:
+              distance_m:
+                type: double
+                ga4_custom_metric: true
+        """
+
+        let configuration = try AnalyticsConfigurationLoader.load(yaml: yaml)
+        #expect(AnalyticsConfigurationValidator.validate(configuration).isValid)
     }
 }
 

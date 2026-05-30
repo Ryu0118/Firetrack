@@ -88,7 +88,7 @@ package enum GA4DesiredStateExtractor {
         skip: Bool,
     ) -> [GA4CustomDimension] {
         skip ? [] : definitions
-            .filter { $0.value.ga4CustomDimension == true }
+            .filter { $0.value.ga4CustomDimension == true && $0.value.pii != true }
             .map { name, _ in
                 GA4CustomDimension(
                     parameterName: name,
@@ -105,7 +105,7 @@ package enum GA4DesiredStateExtractor {
         skip: Bool,
     ) -> [GA4CustomMetric] {
         skip ? [] : definitions
-            .filter { $0.value.ga4CustomMetric == true }
+            .filter { $0.value.ga4CustomMetric == true && $0.value.pii != true }
             .map { name, _ in
                 GA4CustomMetric(
                     parameterName: name,

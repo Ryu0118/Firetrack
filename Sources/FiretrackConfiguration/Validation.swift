@@ -36,16 +36,13 @@ package enum AnalyticsConfigurationValidator {
         for (eventName, event) in configuration.events.sorted(by: { $0.key < $1.key }) {
             validateName(eventName, kind: "event", path: "events.\(eventName)", errors: &errors)
 
-            if event.pii == true {
-                errors.append(.init(path: "events.\(eventName).pii", message: "pii: true is not supported in v1"))
-            }
-
             for (parameterName, parameter) in event.parameters.sorted(by: { $0.key < $1.key }) {
                 let path = "events.\(eventName).parameters.\(parameterName)"
                 validateParameter(
                     parameter,
                     name: parameterName,
                     path: path,
+                    eventIsPII: event.pii == true,
                     errors: &errors,
                 )
                 validateConsistentDefinition(
@@ -59,7 +56,13 @@ package enum AnalyticsConfigurationValidator {
         }
 
         for (parameterName, parameter) in configuration.globalParameters.sorted(by: { $0.key < $1.key }) {
-            validateParameter(parameter, name: parameterName, path: "global_parameters.\(parameterName)", errors: &errors)
+            validateParameter(
+                parameter,
+                name: parameterName,
+                path: "global_parameters.\(parameterName)",
+                eventIsPII: false,
+                errors: &errors,
+            )
         }
 
         for keyEvent in configuration.ga4Sync?.keyEvents ?? [] {
@@ -92,12 +95,11 @@ package enum AnalyticsConfigurationValidator {
         _ parameter: AnalyticsParameterConfiguration,
         name: String,
         path: String,
+        eventIsPII: Bool,
         errors: inout [AnalyticsConfigurationValidationError],
     ) {
         validateName(name, kind: "parameter", path: path, errors: &errors)
-        if parameter.pii == true {
-            errors.append(.init(path: "\(path).pii", message: "pii: true is not supported in v1"))
-        }
+        validatePII(parameter, path: path, eventIsPII: eventIsPII, errors: &errors)
         if parameter.ga4CustomMetric == true, parameter.type != .int, parameter.type != .double {
             errors.append(.init(path: "\(path).ga4_custom_metric", message: "custom metrics must be int or double"))
         }
@@ -105,6 +107,31 @@ package enum AnalyticsConfigurationValidator {
             for value in allowed where !isSnakeCase(value) {
                 errors.append(.init(path: "\(path).allowed.\(value)", message: "allowed enum values must be snake_case"))
             }
+        }
+    }
+
+    /// Refuses to register a PII parameter as a GA4 custom dimension or metric, because GA4
+    /// must never receive personally identifiable information. A PII parameter may still be
+    /// declared and logged locally — it just cannot become GA4 reporting config. Marking the
+    /// whole event `pii: true` propagates the same constraint to every parameter it carries.
+    private static func validatePII(
+        _ parameter: AnalyticsParameterConfiguration,
+        path: String,
+        eventIsPII: Bool,
+        errors: inout [AnalyticsConfigurationValidationError],
+    ) {
+        guard parameter.pii == true || eventIsPII else { return }
+        if parameter.ga4CustomDimension == true {
+            errors.append(.init(
+                path: "\(path).ga4_custom_dimension",
+                message: "PII parameter must not be registered as a GA4 custom dimension",
+            ))
+        }
+        if parameter.ga4CustomMetric == true {
+            errors.append(.init(
+                path: "\(path).ga4_custom_metric",
+                message: "PII parameter must not be registered as a GA4 custom metric",
+            ))
         }
     }
 
