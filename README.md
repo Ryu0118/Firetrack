@@ -5,9 +5,9 @@
 [![Platform macOS](https://img.shields.io/badge/platform-macOS%2026-blue.svg)](https://www.apple.com/macos)
 [![License MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-**One YAML file is your analytics contract. Firetrack keeps your code, your GA4 config, and your tracking plan from ever drifting apart.**
+**Define your Firebase/GA4 analytics in YAML, generate type-safe Swift code & sync GA4 config.**
 
-Analytics rot the moment three things disagree: the tracking plan in a spreadsheet, the event names hardcoded in your app, and the custom dimensions configured by hand in the GA4 console. Firetrack makes `firetrack.yml` the single source of truth — it validates the contract, generates type-safe Swift event code, and pushes missing definitions into GA4 over the Admin API. Change the YAML, regenerate, sync. No console clicking, no typo'd event names, no drift.
+Firetrack makes your analytics contract _executable_. Analytics rot the moment three things disagree: the tracking plan in a spreadsheet, the event names hardcoded in your app, and the custom dimensions configured by hand in the GA4 console. Firetrack makes `firetrack.yml` the single source of truth — it validates the contract, generates type-safe Swift event code, and pushes missing definitions into GA4 over the Admin API. Change the YAML, regenerate, sync. No console clicking, no typo'd event names, no drift.
 
 ## Features
 
@@ -223,9 +223,36 @@ Every command reads `firetrack.yml` from the current directory by default; pass
 `ga4 diff` is always read-only. `ga4 sync` applies by default and **only creates
 missing resources** — Firetrack never deletes, archives, or renames GA4 resources,
 and an existing BigQuery link pointing at a different project is a hard error. Pass
-`--dry-run` to `sync` to preview the changes without touching GA4. Tokens are resolved
-in order: `GOOGLE_OAUTH_ACCESS_TOKEN` → impersonated service account (IAMCredentials)
-→ `gcloud auth print-access-token`.
+`--dry-run` to `sync` to preview the changes without touching GA4.
+
+---
+
+## Authentication
+
+Only the GA4 commands (`ga4 diff`, `ga4 sync`, `doctor`) need credentials — `validate`
+and `generate` are fully offline.
+
+**No tokens or keys go in `firetrack.yml`.** The plan holds only identifiers (GA4
+property ID, service-account email, BigQuery project number). The access token is
+resolved at runtime, in order:
+
+1. **`GOOGLE_OAUTH_ACCESS_TOKEN`** environment variable — set this and `gcloud` is not needed
+2. **Impersonated service account** (`ga4_sync.impersonate_service_account`, via IAMCredentials)
+3. **`gcloud auth print-access-token`**
+
+Firetrack reads exported shell variables, and also auto-loads a **`.env`** file from the
+current directory — exported variables take precedence over `.env`. So either works:
+
+```bash
+export GOOGLE_OAUTH_ACCESS_TOKEN="$(gcloud auth print-access-token)"
+firetrack ga4 sync
+
+# or put it in .env (gitignored) at the project root:
+echo 'GOOGLE_OAUTH_ACCESS_TOKEN=ya29....' > .env
+firetrack ga4 sync
+```
+
+Impersonation requests the `analytics.edit` and `analytics.readonly` scopes.
 
 ---
 
