@@ -39,7 +39,7 @@ package struct DoctorRunner {
     }
 
     /// Computes which remote custom definitions have no matching desired parameter.
-    package static func orphanParameterNames(
+    static func orphanParameterNames(
         desired: GA4DesiredState,
         remote: GA4RemoteState,
     ) -> (dimensions: [String], metrics: [String]) {
@@ -57,7 +57,7 @@ package struct DoctorRunner {
     }
 
     /// Formats a coverage gap as a count plus the offending event names, or "none" when full.
-    package static func coverageSummary(_ missing: [String], total: Int) -> String {
+    static func coverageSummary(_ missing: [String], total: Int) -> String {
         missing.isEmpty ? "none" : "\(missing.count)/\(total) (\(missing.joined(separator: ", ")))"
     }
 
