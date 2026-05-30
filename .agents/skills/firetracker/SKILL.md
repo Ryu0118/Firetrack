@@ -1,5 +1,5 @@
 ---
-name: firetrack-adoption
+name: firetracker
 description: Install the Firetrack CLI and adopt it in a project. Use when a user wants to add Firetrack to their app, set up an analytics-tracking-plan.yaml as the source of truth for Firebase Analytics / GA4, install the firetrack binary (install script, mise, or nest), generate type-safe Swift analytics code, or wire Firetrack validate/generate into CI. Triggers include "install firetrack", "set up firetrack", "add analytics tracking plan", "adopt firetrack", and "firetrack in my project".
 ---
 
