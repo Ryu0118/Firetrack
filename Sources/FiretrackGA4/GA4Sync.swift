@@ -32,6 +32,31 @@ package struct RemoteCustomDefinition: Codable, Equatable {
     package var name: String?
     /// Event parameter name used by the custom definition.
     package var parameterName: String?
+    /// Display name shown in the GA4 UI.
+    package var displayName: String?
+    /// Human-readable description.
+    package var description: String?
+    /// Definition scope (e.g. `EVENT`).
+    package var scope: String?
+    /// Measurement unit, present on custom metrics only (e.g. `STANDARD`, `MILLISECONDS`).
+    package var measurementUnit: String?
+
+    /// Creates a remote custom definition.
+    package init(
+        name: String? = nil,
+        parameterName: String? = nil,
+        displayName: String? = nil,
+        description: String? = nil,
+        scope: String? = nil,
+        measurementUnit: String? = nil,
+    ) {
+        self.name = name
+        self.parameterName = parameterName
+        self.displayName = displayName
+        self.description = description
+        self.scope = scope
+        self.measurementUnit = measurementUnit
+    }
 }
 
 /// Remote key event as returned by GA4 Admin API.

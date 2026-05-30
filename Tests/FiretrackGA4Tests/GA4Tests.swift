@@ -96,6 +96,48 @@ struct GA4Tests {
     }
 
     @Test
+    func remoteStateDecodesEnrichedCustomDefinitionFields() async throws {
+        let dimensionBody = """
+        {"customDimensions":[{\
+        "name":"properties/123/customDimensions/1",\
+        "parameterName":"source",\
+        "displayName":"Recording Source",\
+        "description":"Where it started",\
+        "scope":"EVENT"}]}
+        """
+        let metricBody = """
+        {"customMetrics":[{\
+        "parameterName":"distance_m",\
+        "displayName":"Distance",\
+        "measurementUnit":"METERS",\
+        "scope":"EVENT"}]}
+        """
+        let http = FakeHTTPClient(routes: [
+            "customDimensions": [.init(status: 200, body: dimensionBody)],
+            "customMetrics": [.init(status: 200, body: metricBody)],
+            "keyEvents": [.init(status: 200, body: #"{"keyEvents":[]}"#)],
+            "bigqueryLinks": [.init(status: 200, body: #"{"bigqueryLinks":[]}"#)],
+        ])
+        let client = GA4AdminClient(
+            httpClient: http,
+            betaBaseURL: URL(string: "https://example.com/v1beta"),
+            alphaBaseURL: URL(string: "https://example.com/v1alpha"),
+        )
+
+        let remote = try await client.remoteState(propertyID: "123", token: "token", includeBigQuery: true)
+
+        let dimension = try #require(remote.customDimensions.first)
+        #expect(dimension.parameterName == "source")
+        #expect(dimension.displayName == "Recording Source")
+        #expect(dimension.description == "Where it started")
+        #expect(dimension.scope == "EVENT")
+
+        let metric = try #require(remote.customMetrics.first)
+        #expect(metric.parameterName == "distance_m")
+        #expect(metric.measurementUnit == "METERS")
+    }
+
+    @Test
     func dotEnvParsesCommentsQuotesAndFirstEquals() throws {
         let directory = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
