@@ -1,34 +1,98 @@
 # Firetrack
 
-Firetrack is a deterministic Firebase Analytics and GA4 Admin API toolkit. It treats `analytics-tracking-plan.yaml` as the source of truth, validates the contract, syncs missing GA4 custom definitions/key events/BigQuery links, and generates Swift event code.
+[![Test](https://github.com/Ryu0118/Firetracker/actions/workflows/test.yml/badge.svg)](https://github.com/Ryu0118/Firetracker/actions/workflows/test.yml)
+[![Swift 6.2](https://img.shields.io/badge/Swift-6.2-orange.svg)](https://swift.org)
+[![Platform macOS](https://img.shields.io/badge/platform-macOS%2026-blue.svg)](https://www.apple.com/macos)
+[![License MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-## Package Shape
+**One YAML file is your analytics contract. Firetrack keeps your code, your GA4 config, and your tracking plan from ever drifting apart.**
 
-```mermaid
-graph TD
-    Wrapper["firetrack<br/>executable wrapper"]
-    CLI["FiretrackCLI<br/>ArgumentParser only"]
-    Ops["FiretrackOperations<br/>runners / orchestration"]
-    Config["FiretrackConfiguration<br/>YAML / validation / desired state"]
-    GA4["FiretrackGA4<br/>Admin API / auth / diff / apply"]
-    Gen["FiretrackSwiftGenerator<br/>SwiftSyntax codegen"]
+Analytics rot the moment three things disagree: the tracking plan in a spreadsheet, the event names hardcoded in your app, and the custom dimensions configured by hand in the GA4 console. Firetrack makes `analytics-tracking-plan.yaml` the single source of truth — it validates the contract, generates type-safe Swift event code, and pushes missing definitions into GA4 over the Admin API. Change the YAML, regenerate, sync. No console clicking, no typo'd event names, no drift.
 
-    Wrapper --> CLI
-    CLI --> Ops
-    Ops --> Config
-    Ops --> GA4
-    Ops --> Gen
-    GA4 --> Config
-    Gen --> Config
+## Features
+
+- 📋 **One contract, zero drift** — events, parameters, and GA4 dimensions all flow from one validated YAML file
+- 🦺 **Type-safe events** — generated Swift enums make a mistyped event name a compile error, not a silent data gap
+- ☁️ **Hands-off GA4 setup** — sync custom dimensions, metrics, key events, and BigQuery links straight from the plan, no console required
+
+## Installation
+
+**Install script** — no toolchain needed:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Ryu0118/Firetracker/main/install.sh | bash
 ```
 
-`Sources/firetrack` only imports `FiretrackCLI` and calls `FiretrackCommand.main()`. `FiretrackCLI` owns only ArgumentParser declarations. All logic lives in `FiretrackOperations`, `FiretrackConfiguration`, `FiretrackGA4`, or `FiretrackSwiftGenerator`.
+<details>
+<summary>Other methods (mise, nest, from source)</summary>
 
-## YAML Contract
+```bash
+# mise
+mise use -g ubi:Ryu0118/Firetracker[exe=firetrack]
+
+# nest — add to nestfile.yaml, then: nest bootstrap nestfile.yaml
+#   - reference: Ryu0118/Firetracker
+#     version: 0.1.0
+
+# from source (Swift 6.2, macOS 26+)
+git clone https://github.com/Ryu0118/Firetracker.git
+cd Firetracker && swift build -c release
+```
+
+</details>
+
+Verify with `firetrack --version`. Requires **macOS 26+**.
+
+---
+
+## Quick start
+
+1. Write `Documents/analytics-tracking-plan.yaml`:
+
+   ```yaml
+   version: 1
+   platforms: [ios]
+   events:
+     recording_completed:
+       pii: false
+       parameters:
+         source:
+           type: enum
+           required: true
+           allowed: [app, widget]
+           ga4_custom_dimension: true
+         distance_m:
+           type: double
+           required: true
+           ga4_custom_metric: true
+   ```
+
+2. Validate it:
+
+   ```bash
+   firetrack validate
+   ```
+
+3. Generate type-safe Swift:
+
+   ```bash
+   firetrack generate --output Sources/Analytics/GeneratedAnalytics.swift --overwrite
+   ```
+
+4. Log events with no stringly-typed names:
+
+   ```swift
+   let event = AnalyticsEvent.recordingCompleted(source: .app, distanceM: 1200)
+   ```
+
+---
+
+## The YAML contract
 
 ```yaml
 version: 1
 platforms: [ios]
+
 destinations:
   firebase_analytics:
     enabled: true
@@ -70,66 +134,74 @@ events:
         ga4_custom_metric: true
 ```
 
+`validate` enforces snake_case names, GA4-safe prefixes, metric type rules
+(`int`/`double` only), enum value formatting, and key-event references —
+deterministically, with sorted output. `ga4_custom_metric` units are inferred
+from the name suffix (`_ms`, `_sec`, `_m`).
+
+---
+
 ## Commands
 
 ```bash
-swift run --package-path Firetrack firetrack validate \
-  --plan Documents/analytics-tracking-plan.yaml
-
-swift run --package-path Firetrack firetrack ga4 diff \
-  --plan Documents/analytics-tracking-plan.yaml
-
-swift run --package-path Firetrack firetrack ga4 sync \
-  --plan Documents/analytics-tracking-plan.yaml \
-  --apply
-
-swift run --package-path Firetrack firetrack generate \
-  --plan Documents/analytics-tracking-plan.yaml \
-  --output /tmp/GeneratedAnalytics.swift \
-  --access-level public \
-  --overwrite
-
-swift run --package-path Firetrack firetrack doctor \
-  --plan Documents/analytics-tracking-plan.yaml
+firetrack validate                      # check the contract
+firetrack generate --output <path>      # emit type-safe Swift (--overwrite, --access-level)
+firetrack ga4 diff                      # show what GA4 is missing (dry-run)
+firetrack ga4 sync --apply              # create the missing GA4 resources
+firetrack doctor                        # check YAML + auth readiness
 ```
 
-## Authentication
+Every command takes `--plan <path>` (default `Documents/analytics-tracking-plan.yaml`).
 
-Firetrack resolves access tokens in this order:
+| Command | Key flags |
+|---------|-----------|
+| `generate` | `--output` (required), `--access-level internal\|package\|public`, `--overwrite` |
+| `ga4 diff` / `ga4 sync` | `--property-id`, `--impersonate-service-account`, `--big-query-project-number`, `--skip-custom-definitions`, `--skip-key-events`, `--skip-bigquery` |
+| `ga4 sync` | `--apply` (without it, sync is a dry-run) |
 
-1. `GOOGLE_OAUTH_ACCESS_TOKEN`
-2. `ga4_sync.impersonate_service_account`, using IAMCredentials `generateAccessToken`
-3. `gcloud auth print-access-token`
+---
 
-The impersonated token requests these scopes:
+## Safety model
 
-- `https://www.googleapis.com/auth/analytics.edit`
-- `https://www.googleapis.com/auth/analytics.readonly`
+`ga4 diff` and `ga4 sync` (without `--apply`) are dry-runs. Apply mode **only
+creates missing resources** — Firetrack never deletes, archives, or renames GA4
+resources, and an existing BigQuery link pointing at a different project is a hard
+error. Tokens are resolved in order: `GOOGLE_OAUTH_ACCESS_TOKEN` → impersonated
+service account (IAMCredentials) → `gcloud auth print-access-token`.
 
-## Safety Model
+---
 
-`ga4 diff` and `ga4 sync` without `--apply` are dry-runs. Apply mode only creates missing resources. Firetrack does not delete, archive, or rename GA4 resources. Existing BigQuery links to a different project are treated as a hard error.
+## Architecture
 
-## Swift Codegen
-
-`firetrack generate` emits byte-stable Swift for identical YAML. The generated source is parsed with SwiftSyntax before it is written. Existing output files are not overwritten unless `--overwrite` is passed.
-
-Generated event shape:
-
-```swift
-let event = AnalyticsEvent.recordingCompleted(
-    source: .app,
-    distanceM: 1200,
-    durationSec: 300
-)
+```mermaid
+graph TD
+    Wrapper["firetrack<br/>executable"] --> CLI["FiretrackCLI<br/>ArgumentParser"]
+    CLI --> Ops["FiretrackOperations<br/>runners / output"]
+    Ops --> Config["FiretrackConfiguration<br/>YAML / validation"]
+    Ops --> GA4["FiretrackGA4<br/>Admin API / auth"]
+    Ops --> Gen["FiretrackSwiftGenerator<br/>SwiftSyntax codegen"]
+    GA4 --> Config
+    Gen --> Config
 ```
 
-## MyApp Migration
+Generated Swift is byte-stable for identical YAML and is parsed with SwiftSyntax
+before it is ever written to disk.
 
-During migration, keep `Scripts/sync-ga4-analytics.rb` until Firetrack parity is proven against the real property. After parity, prefer these Make targets:
+---
 
-```bash
-make analytics-sync-dry-run
-make analytics-sync
-make analytics-generate-swift
+## CI integration
+
+```yaml
+- run: firetrack validate
+- run: |
+    firetrack generate --output Sources/Analytics/GeneratedAnalytics.swift --overwrite
+    git diff --exit-code Sources/Analytics/GeneratedAnalytics.swift
 ```
+
+The build fails if a plan change wasn't regenerated and committed.
+
+---
+
+## License
+
+MIT — see [LICENSE](LICENSE).
