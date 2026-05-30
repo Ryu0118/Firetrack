@@ -18,9 +18,9 @@ firetrack (exe) → FiretrackCLI → FiretrackOperations → {Configuration, GA4
 - `FiretrackOperations` — runners, output formatting (`logger`), dependency wiring, filesystem writes, logging setup.
 - `FiretrackConfiguration` — Yams decoding, schema models, validation, naming conversion, GA4 desired-state extraction.
 - `FiretrackGA4` — GA4 Admin API client, auth token providers, remote state, diff, apply.
-- `FiretrackSwiftGenerator` — SwiftSyntax-backed generation of the Swift analytics contract.
+- `FiretrackSwiftGenerator` — string-based generation of the Swift analytics contract, validated by parsing (SwiftParser) before write.
 
-**Never** put Yams, URLSession, SwiftSyntax, GA4 endpoint strings, or diff logic in `FiretrackCLI`.
+**Never** put Yams, URLSession, SwiftParser, GA4 endpoint strings, or diff logic in `FiretrackCLI`.
 
 ## Development
 
@@ -57,7 +57,7 @@ The toolchain is pinned via `nestfile.yaml` and resolved into `.nest/bin/` by
 - YAML is the source of truth.
 - Output must be deterministic (byte-stable for identical input).
 - GA4 sync **creates missing resources only** — never delete, archive, or rename remote GA4 resources.
-- Generated Swift must parse (SwiftSyntax) before it is written.
+- Generated Swift must parse (SwiftParser) before it is written.
 - Auth resolves in order: `GOOGLE_OAUTH_ACCESS_TOKEN` → impersonated service account → `gcloud`.
 
 ## Hooks & Gates

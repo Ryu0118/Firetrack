@@ -1,6 +1,6 @@
 ---
 name: firetrack
-description: The single skill for everything Firetrack. Use when (a) installing or adopting the Firetrack CLI in a project — set up a firetrack.yml tracking plan as the source of truth for Firebase Analytics / GA4, install the firetrack binary (install script, mise, or nest), generate type-safe Swift analytics code, or wire validate/generate into CI; (b) designing, validating, syncing, or analyzing a Firebase Analytics / GA4 tracking plan; or (c) editing the Firetrack Swift package itself — its CLI, GA4 sync logic, YAML validation, SwiftSyntax generator, tests, or docs. Triggers include "install firetrack", "set up firetrack", "add analytics tracking plan", "adopt firetrack", "design a GA4 tracking plan", "sync GA4 custom dimensions", and "work on the Firetrack package".
+description: The single skill for everything Firetrack. Use when (a) installing or adopting the Firetrack CLI in a project — set up a firetrack.yml tracking plan as the source of truth for Firebase Analytics / GA4, install the firetrack binary (install script, mise, or nest), generate type-safe Swift analytics code, or wire validate/generate into CI; (b) designing, validating, syncing, or analyzing a Firebase Analytics / GA4 tracking plan; or (c) editing the Firetrack Swift package itself — its CLI, GA4 sync logic, YAML validation, Swift code generator, tests, or docs. Triggers include "install firetrack", "set up firetrack", "add analytics tracking plan", "adopt firetrack", "design a GA4 tracking plan", "sync GA4 custom dimensions", and "work on the Firetrack package".
 ---
 
 # Firetrack
@@ -90,7 +90,7 @@ firetrack generate --config firetrack.yml \
 ```
 
 `generate` is deterministic (byte-stable for identical YAML) and the output is parsed
-by SwiftSyntax before being written. Use the generated `AnalyticsEvent` enum:
+by SwiftParser before being written. Use the generated `AnalyticsEvent` enum:
 
 ```swift
 let event = AnalyticsEvent.recordingCompleted(source: .app, distanceM: 1200)
@@ -177,9 +177,9 @@ When editing the Firetrack Swift package, keep the module boundaries strict.
 - `FiretrackOperations`: runners, output formatting, dependency wiring, and filesystem writes.
 - `FiretrackConfiguration`: Yams decoding, schema models, validation, naming conversion, and GA4 desired-state extraction.
 - `FiretrackGA4`: GA4 Admin API client, auth token providers, remote state, diff, and apply.
-- `FiretrackSwiftGenerator`: SwiftSyntax-backed generated Swift analytics contract.
+- `FiretrackSwiftGenerator`: string-based generated Swift analytics contract, validated by parsing (SwiftParser) before write.
 
-Never put Yams, URLSession, SwiftSyntax, GA4 endpoint strings, or diff logic in `FiretrackCLI`.
+Never put Yams, URLSession, SwiftParser, GA4 endpoint strings, or diff logic in `FiretrackCLI`.
 
 ### Workflow
 
@@ -197,4 +197,4 @@ Never put Yams, URLSession, SwiftSyntax, GA4 endpoint strings, or diff logic in 
 - YAML is the source of truth.
 - Output must be deterministic (byte-stable for identical input).
 - GA4 sync creates missing resources only — never delete, archive, or rename remote GA4 resources.
-- Generated Swift must parse (SwiftSyntax) before being written.
+- Generated Swift must parse (SwiftParser) before being written.

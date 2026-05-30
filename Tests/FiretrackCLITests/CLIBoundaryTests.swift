@@ -16,7 +16,7 @@ struct CLIBoundaryTests {
             .joined(separator: "\n")
 
         #expect(!source.contains("import Yams"))
-        #expect(!source.contains("import SwiftSyntax"))
+        #expect(!source.contains("import SwiftParser"))
         #expect(!source.contains("URLSession"))
         #expect(!source.contains("analyticsadmin.googleapis.com"))
     }
