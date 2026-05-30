@@ -107,7 +107,8 @@ cyclomatic_complexity:
   error: 15
 
 function_parameter_count:
-  warning: 5
+  # swift-log's LogHandler.log(...) requires a 7-parameter signature we cannot change.
+  warning: 7
   error: 8
 
 large_tuple:

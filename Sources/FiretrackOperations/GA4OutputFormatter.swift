@@ -18,12 +18,12 @@ enum GA4OutputFormatter {
     }
 
     private static func printPayloads(_ label: String, _ names: [String], marker: String = "+") {
-        print("\n\(label)")
+        logger.info("\n\(label)")
         if names.isEmpty {
-            print("  No changes")
+            logger.info("  No changes")
         } else {
             for name in names.sorted() {
-                print("  \(marker) \(name)")
+                logger.info("  \(marker) \(name)")
             }
         }
     }

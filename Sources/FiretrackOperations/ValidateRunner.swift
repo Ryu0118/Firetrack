@@ -10,6 +10,6 @@ package struct ValidateRunner {
     package func run(_ request: ValidateRequest) throws {
         let configuration = try AnalyticsConfigurationLoader.load(path: request.planPath)
         try ConfigurationValidationGate.validate(configuration)
-        print("Valid analytics tracking plan: \(request.planPath)")
+        logger.info("Valid analytics tracking plan: \(request.planPath)")
     }
 }
