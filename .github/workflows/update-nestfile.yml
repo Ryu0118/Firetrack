@@ -15,7 +15,7 @@ concurrency:
 jobs:
   update-nestfile:
     name: Update Nestfile
-    runs-on: macos-latest
+    runs-on: macos-26
     permissions:
       contents: write
       pull-requests: write

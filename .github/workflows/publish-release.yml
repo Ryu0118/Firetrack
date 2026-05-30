@@ -40,7 +40,7 @@ jobs:
 
   build-macos:
     needs: preflight
-    runs-on: macos-latest
+    runs-on: macos-26
     steps:
       - uses: actions/checkout@v6
 
@@ -114,7 +114,7 @@ jobs:
 
   create-release:
     needs: [commit-version, build-macos]
-    runs-on: macos-latest
+    runs-on: macos-26
     permissions:
       contents: write
     steps:

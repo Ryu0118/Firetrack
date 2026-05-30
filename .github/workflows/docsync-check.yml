@@ -16,7 +16,7 @@ concurrency:
 jobs:
   docsync:
     name: Docsync Check
-    runs-on: macos-latest
+    runs-on: macos-26
     permissions:
       contents: read
     steps:

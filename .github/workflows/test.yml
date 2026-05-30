@@ -36,7 +36,7 @@ concurrency:
 jobs:
   lint:
     name: Lint (SwiftLint + my-swift-linter)
-    runs-on: macos-latest
+    runs-on: macos-26
     permissions:
       contents: read
     steps:
@@ -57,7 +57,7 @@ jobs:
   test:
     name: Unit Tests (macOS)
     needs: lint
-    runs-on: macos-latest
+    runs-on: macos-26
     permissions:
       contents: read
     steps:
