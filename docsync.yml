@@ -1,0 +1,43 @@
+rules:
+- name: readme-cli
+  sources:
+  - Sources/FiretrackCLI/FiretrackCommand.swift
+  - Sources/FiretrackCLI/ValidateCommand.swift
+  - Sources/FiretrackCLI/GenerateCommand.swift
+  - Sources/FiretrackCLI/GA4Command.swift
+  - Sources/FiretrackCLI/GA4DiffCommand.swift
+  - Sources/FiretrackCLI/GA4SyncCommand.swift
+  - Sources/FiretrackCLI/DoctorCommand.swift
+  - Sources/FiretrackCLI/GA4Options.swift
+  doc: README.md
+  message: "CLI command surface changed \u2014 update README (Commands / Quick start)
+    if commands or flags changed."
+  checksum: 8b078d2c5cf65ee415276fb68317a2d54e53bf3be474614c56236f8deca81075
+- name: readme-config
+  sources:
+  - Sources/FiretrackConfiguration/AnalyticsTrackingConfiguration.swift
+  - Sources/FiretrackConfiguration/AnalyticsEventConfiguration.swift
+  - Sources/FiretrackConfiguration/AnalyticsParameterConfiguration.swift
+  - Sources/FiretrackConfiguration/Validation.swift
+  doc: README.md
+  message: "Tracking-plan schema or validation rules changed \u2014 update README
+    (The YAML contract) and the firetrack-adoption skill schema."
+  checksum: 25a7f0aa9853f2a8932394f08cc3ebaa9af321ea34e28e81e94b1850b0e3409c
+- name: readme-codegen
+  sources:
+  - Sources/FiretrackSwiftGenerator/SwiftAnalyticsGenerator.swift
+  - Sources/FiretrackSwiftGenerator/SwiftAnalyticsGeneratorOptions.swift
+  doc: README.md
+  message: "Swift codegen output shape changed \u2014 update README (Quick start generated
+    example)."
+  checksum: 9be799b1f284b97787b573779b197bab3de63aa89983c053f7291b9a8097a8e2
+- name: agents-architecture
+  sources:
+  - Package.swift
+  - Sources/firetrack/firetrack.swift
+  - Sources/FiretrackOperations/FiretrackLogging.swift
+  - Sources/FiretrackOperations/FiretrackLogHandler.swift
+  doc: AGENTS.md
+  message: "Module graph, logging setup, or entry point changed \u2014 update AGENTS.md
+    (Architecture / Conventions)."
+  checksum: d39632f9f6fad6869087e46a9ffdfdf41329f3d227ed96263974aa92f5aecd92
