@@ -45,8 +45,11 @@ package struct GcloudAccessTokenProvider: AccessTokenProvider {
         if process.terminationStatus == 0 {
             return output.trimmingCharacters(in: .whitespacesAndNewlines)
         }
+        if process.terminationStatus == 127 {
+            throw GA4SyncError.tokenUnavailable("gcloud: not found on PATH")
+        }
         let stderr = String(data: errorPipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
-        throw GA4SyncError.tokenUnavailable("failed to get access token via gcloud: \(stderr)")
+        throw GA4SyncError.tokenUnavailable("gcloud: \(stderr.trimmingCharacters(in: .whitespacesAndNewlines))")
     }
 }
 
@@ -119,7 +122,15 @@ package struct CompositeAccessTokenProvider: AccessTokenProvider {
                 messages.append(String(describing: error))
             }
         }
-        throw GA4SyncError.tokenUnavailable(messages.joined(separator: "\n"))
+        let details = messages.map { "  - \($0)" }.joined(separator: "\n")
+        throw GA4SyncError.tokenUnavailable("""
+        Could not obtain a GA4 access token. Do one of:
+          • export GOOGLE_OAUTH_ACCESS_TOKEN=...   (skips gcloud entirely)
+          • add GOOGLE_OAUTH_ACCESS_TOKEN to .env in the working directory
+          • install gcloud and run: gcloud auth login
+        Details:
+        \(details)
+        """)
     }
 }
 

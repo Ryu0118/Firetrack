@@ -22,11 +22,26 @@ package struct DoctorRunner {
             override: request.impersonateServiceAccount,
         )
         logger.info("Impersonation service account: \(serviceAccount ?? "not configured")")
+        await reportAuth(serviceAccount: serviceAccount)
+    }
+
+    /// Reports which authentication source can produce a GA4 token, using the same
+    /// resolution order as `ga4 diff` / `ga4 sync` (env → impersonation → gcloud).
+    private func reportAuth(serviceAccount: String?) async {
+        let environment = DotEnv.mergedEnvironment()
+        if await (try? EnvironmentAccessTokenProvider(environment: environment).accessToken()) != nil {
+            logger.info("Auth: GOOGLE_OAUTH_ACCESS_TOKEN ✓")
+            return
+        }
+        let fallback: any AccessTokenProvider = serviceAccount.map {
+            ImpersonatedAccessTokenProvider(serviceAccount: $0)
+        } ?? GcloudAccessTokenProvider()
+        let label = serviceAccount != nil ? "impersonated service account" : "gcloud"
         do {
-            _ = try await GcloudAccessTokenProvider().accessToken()
-            logger.info("gcloud token: ok")
+            _ = try await fallback.accessToken()
+            logger.info("Auth: \(label) ✓")
         } catch {
-            logger.error("gcloud token: failed: \(error)")
+            logger.error("Auth: none available\n\(error)")
         }
     }
 }
