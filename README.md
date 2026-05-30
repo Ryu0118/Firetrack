@@ -242,10 +242,10 @@ Every command reads `firetracker.yml` from the current directory by default; pas
 
 ## Safety model
 
-`ga4 diff` is always read-only. `ga4 sync` applies by default and **only creates
-missing resources** — Firetrack never deletes, archives, or renames GA4 resources,
-and an existing BigQuery link pointing at a different project is a hard error. Pass
-`--dry-run` to `sync` to preview the changes without touching GA4.
+- `ga4 diff` is **read-only** — it only reports what's missing.
+- `ga4 sync` **creates missing resources only** — never deletes, archives, or renames anything in GA4.
+- A BigQuery link pointing at a different project is a **hard error**, not a silent overwrite.
+- `ga4 sync` applies by default; pass `--dry-run` to preview first.
 
 ---
 
