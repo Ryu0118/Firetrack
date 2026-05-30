@@ -9,6 +9,17 @@ package struct Destinations: Codable, Equatable {
     /// BigQuery export destination settings.
     package var bigquery: BigQueryDestination?
 
+    /// Creates a destinations block.
+    package init(
+        firebaseAnalytics: FirebaseAnalyticsDestination? = nil,
+        ga4: GA4Destination? = nil,
+        bigquery: BigQueryDestination? = nil,
+    ) {
+        self.firebaseAnalytics = firebaseAnalytics
+        self.ga4 = ga4
+        self.bigquery = bigquery
+    }
+
     enum CodingKeys: String, CodingKey {
         case firebaseAnalytics = "firebase_analytics"
         case ga4
@@ -26,6 +37,11 @@ package struct FirebaseAnalyticsDestination: Codable, Equatable {
 package struct GA4Destination: Codable, Equatable {
     /// GA4 property ID.
     package var propertyID: String?
+
+    /// Creates a GA4 destination.
+    package init(propertyID: String? = nil) {
+        self.propertyID = propertyID
+    }
 
     enum CodingKeys: String, CodingKey {
         case propertyID = "property_id"

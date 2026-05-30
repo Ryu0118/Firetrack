@@ -50,6 +50,34 @@ struct GA4Tests {
     }
 
     @Test
+    func reverserScaffoldsConfigurationFromRemoteState() {
+        let remote = GA4RemoteState(
+            customDimensions: [.init(parameterName: "source", displayName: "Source", description: "where from")],
+            customMetrics: [.init(parameterName: "distance_m", displayName: "Distance", measurementUnit: "METERS")],
+            keyEvents: [.init(name: nil, eventName: "recording_completed")],
+            bigQueryLinks: [],
+        )
+
+        let configuration = GA4RemoteStateReverser.configuration(from: remote, propertyID: "123")
+
+        #expect(configuration.destinations?.ga4?.propertyID == "123")
+        #expect(configuration.ga4Sync?.keyEvents == ["recording_completed"])
+        #expect(configuration.events["recording_completed"] != nil)
+
+        let dimension = try? #require(configuration.globalParameters["source"])
+        #expect(dimension?.type == .string)
+        #expect(dimension?.ga4CustomDimension == true)
+        #expect(dimension?.displayName == "Source")
+
+        let metric = configuration.globalParameters["distance_m"]
+        #expect(metric?.type == .double)
+        #expect(metric?.ga4CustomMetric == true)
+
+        // The scaffold is a valid plan: it round-trips through serialize + load + validate.
+        #expect(AnalyticsConfigurationValidator.validate(configuration).isValid)
+    }
+
+    @Test
     func clientPaginationAndApplyTreatsAlreadyExistsAsNoop() async throws {
         // Responses are keyed by endpoint so the test is independent of the order in which
         // remoteState issues its concurrent fetches. customDimensions paginates (page 1 → page 2).

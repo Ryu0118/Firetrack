@@ -9,6 +9,17 @@ package struct GA4SyncConfiguration: Codable, Equatable {
     /// BigQuery link desired state.
     package var bigQueryLink: BigQueryLinkConfiguration?
 
+    /// Creates a GA4 sync configuration.
+    package init(
+        impersonateServiceAccount: String? = nil,
+        keyEvents: [String]? = nil,
+        bigQueryLink: BigQueryLinkConfiguration? = nil,
+    ) {
+        self.impersonateServiceAccount = impersonateServiceAccount
+        self.keyEvents = keyEvents
+        self.bigQueryLink = bigQueryLink
+    }
+
     enum CodingKeys: String, CodingKey {
         case impersonateServiceAccount = "impersonate_service_account"
         case keyEvents = "key_events"
