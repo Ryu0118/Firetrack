@@ -96,6 +96,48 @@ struct GA4Tests {
     }
 
     @Test
+    func dotEnvParsesCommentsQuotesAndFirstEquals() throws {
+        let directory = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        try """
+        # a comment
+        export GOOGLE_OAUTH_ACCESS_TOKEN="ya29.abc=def"
+
+        QUOTED='single'
+        BARE = plain
+        """.write(to: directory.appending(path: ".env"), atomically: true, encoding: .utf8)
+
+        let env = DotEnv.mergedEnvironment(directory: directory.path(percentEncoded: false), processEnvironment: [:])
+        #expect(env["GOOGLE_OAUTH_ACCESS_TOKEN"] == "ya29.abc=def") // first '=' split, quotes stripped, export dropped
+        #expect(env["QUOTED"] == "single")
+        #expect(env["BARE"] == "plain")
+    }
+
+    @Test
+    func dotEnvLetsExportedVariableWinOverFile() throws {
+        let directory = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        try "GOOGLE_OAUTH_ACCESS_TOKEN=from_dotenv"
+            .write(to: directory.appending(path: ".env"), atomically: true, encoding: .utf8)
+
+        let env = DotEnv.mergedEnvironment(
+            directory: directory.path(percentEncoded: false),
+            processEnvironment: ["GOOGLE_OAUTH_ACCESS_TOKEN": "from_shell"],
+        )
+        #expect(env["GOOGLE_OAUTH_ACCESS_TOKEN"] == "from_shell") // exported var wins over .env
+    }
+
+    @Test
+    func dotEnvIsSilentNoOpWhenAbsent() {
+        let directory = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
+        let env = DotEnv.mergedEnvironment(
+            directory: directory.path(percentEncoded: false),
+            processEnvironment: ["A": "1"],
+        )
+        #expect(env == ["A": "1"])
+    }
+
+    @Test
     func validationRejectsConflictingParameterAcrossEvents() {
         let configuration = AnalyticsTrackingConfiguration(
             version: 1,
