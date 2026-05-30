@@ -45,6 +45,37 @@ struct ConfigurationTests {
     }
 
     @Test
+    func customDefinitionDescriptionAndDisplayNameComeFromSchema() throws {
+        let yaml = """
+        version: 1
+        events:
+          recording_completed:
+            parameters:
+              source:
+                type: enum
+                allowed: [app, widget]
+                display_name: Recording Source
+                description: Where the recording was started from.
+                ga4_custom_dimension: true
+              distance_m:
+                type: double
+                ga4_custom_metric: true
+        """
+
+        let configuration = try AnalyticsConfigurationLoader.load(yaml: yaml)
+        let desired = GA4DesiredStateExtractor.extract(from: configuration)
+
+        let dimension = try #require(desired.customDimensions.first { $0.parameterName == "source" })
+        #expect(dimension.displayName == "Recording Source")
+        #expect(dimension.description == "Where the recording was started from.")
+
+        // Unspecified metadata falls back to the humanized name and the default description.
+        let metric = try #require(desired.customMetrics.first { $0.parameterName == "distance_m" })
+        #expect(metric.displayName == "Distance M")
+        #expect(metric.description == "Firetrack analytics metric: distance_m")
+    }
+
+    @Test
     func piiParameterCannotBecomeGA4ReportingConfig() throws {
         let yaml = """
         version: 1

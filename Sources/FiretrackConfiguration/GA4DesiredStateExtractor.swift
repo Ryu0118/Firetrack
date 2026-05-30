@@ -89,11 +89,11 @@ package enum GA4DesiredStateExtractor {
     ) -> [GA4CustomDimension] {
         skip ? [] : definitions
             .filter { $0.value.ga4CustomDimension == true && $0.value.pii != true }
-            .map { name, _ in
+            .map { name, definition in
                 GA4CustomDimension(
                     parameterName: name,
-                    displayName: humanize(name),
-                    description: "Firetrack analytics parameter: \(name)",
+                    displayName: definition.displayName ?? humanize(name),
+                    description: definition.description ?? "Firetrack analytics parameter: \(name)",
                     scope: "EVENT",
                 )
             }
@@ -106,11 +106,11 @@ package enum GA4DesiredStateExtractor {
     ) -> [GA4CustomMetric] {
         skip ? [] : definitions
             .filter { $0.value.ga4CustomMetric == true && $0.value.pii != true }
-            .map { name, _ in
+            .map { name, definition in
                 GA4CustomMetric(
                     parameterName: name,
-                    displayName: humanize(name),
-                    description: "Firetrack analytics metric: \(name)",
+                    displayName: definition.displayName ?? humanize(name),
+                    description: definition.description ?? "Firetrack analytics metric: \(name)",
                     measurementUnit: measurementUnit(name),
                     scope: "EVENT",
                 )

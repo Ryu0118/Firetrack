@@ -8,6 +8,10 @@ package struct AnalyticsParameterConfiguration: Codable, Equatable {
     package var required: Bool?
     /// Allowed enum values for bounded string parameters.
     package var allowed: [String]?
+    /// Human-readable description, used as the GA4 custom definition description.
+    package var description: String?
+    /// Display name override for the GA4 custom dimension/metric.
+    package var displayName: String?
     /// Whether to register the parameter as a GA4 custom dimension.
     package var ga4CustomDimension: Bool?
     /// Whether to register the parameter as a GA4 custom metric.
@@ -20,6 +24,8 @@ package struct AnalyticsParameterConfiguration: Codable, Equatable {
         type: AnalyticsParameterType,
         required: Bool? = nil,
         allowed: [String]? = nil,
+        description: String? = nil,
+        displayName: String? = nil,
         ga4CustomDimension: Bool? = nil,
         ga4CustomMetric: Bool? = nil,
         pii: Bool? = nil,
@@ -27,6 +33,8 @@ package struct AnalyticsParameterConfiguration: Codable, Equatable {
         self.type = type
         self.required = required
         self.allowed = allowed
+        self.description = description
+        self.displayName = displayName
         self.ga4CustomDimension = ga4CustomDimension
         self.ga4CustomMetric = ga4CustomMetric
         self.pii = pii
@@ -36,6 +44,8 @@ package struct AnalyticsParameterConfiguration: Codable, Equatable {
         case type
         case required
         case allowed
+        case description
+        case displayName = "display_name"
         case ga4CustomDimension = "ga4_custom_dimension"
         case ga4CustomMetric = "ga4_custom_metric"
         case pii
@@ -59,6 +69,8 @@ package extension AnalyticsParameterConfiguration {
             type: override.type,
             required: override.required ?? required,
             allowed: override.allowed ?? allowed,
+            description: override.description ?? description,
+            displayName: override.displayName ?? displayName,
             ga4CustomDimension: override.ga4CustomDimension ?? ga4CustomDimension,
             ga4CustomMetric: override.ga4CustomMetric ?? ga4CustomMetric,
             pii: override.pii ?? pii,
