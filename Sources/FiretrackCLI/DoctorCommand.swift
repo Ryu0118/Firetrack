@@ -10,9 +10,12 @@ struct DoctorCommand: AsyncParsableCommand {
 
     @OptionGroup var options: GA4Options
 
+    @Flag(help: "Also list GA4 custom definitions that exist remotely but are absent from the plan (read-only).")
+    var checkRemote = false
+
     init() {}
 
     func run() async throws {
-        try await DoctorRunner().run(options.request(apply: false))
+        try await DoctorRunner().run(options.request(apply: false), checkRemote: checkRemote)
     }
 }

@@ -1,4 +1,5 @@
-import FiretrackConfiguration
+@testable import FiretrackConfiguration
+@testable import FiretrackGA4
 @testable import FiretrackOperations
 import Foundation
 import Testing
@@ -42,6 +43,32 @@ struct OperationsTests {
         #expect(throws: (any Error).self) {
             try InitRunner().run(.init(outputPath: plan.path(percentEncoded: false)))
         }
+    }
+
+    @Test
+    func orphanParameterNamesFindsRemoteDefinitionsAbsentFromThePlan() {
+        let desired = GA4DesiredState(
+            customDimensions: [
+                GA4CustomDimension(parameterName: "source", displayName: "Source", description: "", scope: "EVENT"),
+            ],
+            customMetrics: [],
+            keyEvents: [],
+            bigQueryLink: nil,
+        )
+        let remote = GA4RemoteState(
+            customDimensions: [
+                RemoteCustomDefinition(parameterName: "source"),
+                RemoteCustomDefinition(parameterName: "legacy_dim"),
+            ],
+            customMetrics: [RemoteCustomDefinition(parameterName: "old_metric")],
+            keyEvents: [],
+            bigQueryLinks: [],
+        )
+
+        let orphans = DoctorRunner.orphanParameterNames(desired: desired, remote: remote)
+
+        #expect(orphans.dimensions == ["legacy_dim"])
+        #expect(orphans.metrics == ["old_metric"])
     }
 
     @Test

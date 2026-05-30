@@ -4,11 +4,16 @@ import Foundation
 
 /// Runner for the `firetrack doctor` command.
 package struct DoctorRunner {
-    /// Creates a doctor runner.
-    package init() {}
+    private let client: GA4AdminClient
 
-    /// Prints local YAML and auth readiness checks.
-    package func run(_ request: GA4Request) async throws {
+    /// Creates a doctor runner.
+    package init(client: GA4AdminClient = .init()) {
+        self.client = client
+    }
+
+    /// Prints local YAML and auth readiness checks. When `checkRemote` is set, also reports
+    /// GA4 custom definitions that exist remotely but are missing from the plan (read-only).
+    package func run(_ request: GA4Request, checkRemote: Bool = false) async throws {
         let configuration = try AnalyticsConfigurationLoader.load(path: request.planPath)
         let report = AnalyticsConfigurationValidator.validate(configuration)
         logger.info("YAML validation: \(report.isValid ? "ok" : "failed")")
@@ -24,6 +29,31 @@ package struct DoctorRunner {
         )
         logger.info("Impersonation service account: \(serviceAccount ?? "not configured")")
         await reportAuth(serviceAccount: serviceAccount)
+        if checkRemote {
+            try await reportRemoteDrift(
+                configuration: configuration,
+                propertyID: propertyID,
+                serviceAccount: serviceAccount,
+            )
+        }
+    }
+
+    /// Computes which remote custom definitions have no matching desired parameter.
+    package static func orphanParameterNames(
+        desired: GA4DesiredState,
+        remote: GA4RemoteState,
+    ) -> (dimensions: [String], metrics: [String]) {
+        let desiredDimensions = Set(desired.customDimensions.map(\.parameterName))
+        let desiredMetrics = Set(desired.customMetrics.map(\.parameterName))
+        let dimensions = remote.customDimensions
+            .compactMap(\.parameterName)
+            .filter { !desiredDimensions.contains($0) }
+            .sorted()
+        let metrics = remote.customMetrics
+            .compactMap(\.parameterName)
+            .filter { !desiredMetrics.contains($0) }
+            .sorted()
+        return (dimensions, metrics)
     }
 
     /// Formats a coverage gap as a count plus the offending event names, or "none" when full.
@@ -62,6 +92,34 @@ package struct DoctorRunner {
             logger.info("Auth: \(label) ✓")
         } catch {
             logger.error("Auth: none available\n\(error)")
+        }
+    }
+
+    /// Lists remote custom dimensions/metrics that the plan does not declare. This is purely
+    /// informational: Firetrack never deletes remote resources, so these are flagged, not removed.
+    private func reportRemoteDrift(
+        configuration: AnalyticsTrackingConfiguration,
+        propertyID: String?,
+        serviceAccount: String?,
+    ) async throws {
+        guard let propertyID else {
+            logger.info("Remote drift: skipped (no GA4 property ID)")
+            return
+        }
+        let token = try await GA4ContextFactory.tokenProvider(serviceAccount: serviceAccount).accessToken()
+        let remote = try await client.remoteState(propertyID: propertyID, token: token, includeBigQuery: false)
+        let desired = GA4DesiredStateExtractor.extract(from: configuration)
+        let orphans = Self.orphanParameterNames(desired: desired, remote: remote)
+        if orphans.dimensions.isEmpty, orphans.metrics.isEmpty {
+            logger.info("Remote drift: none (every remote custom definition is in the plan)")
+            return
+        }
+        logger.info("Remote drift (in GA4, not in the plan — Firetrack will not delete these):")
+        for name in orphans.dimensions {
+            logger.info("  - custom dimension: \(name)")
+        }
+        for name in orphans.metrics {
+            logger.info("  - custom metric: \(name)")
         }
     }
 }
