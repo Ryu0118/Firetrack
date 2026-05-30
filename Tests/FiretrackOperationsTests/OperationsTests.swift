@@ -24,4 +24,11 @@ struct OperationsTests {
             ))
         }
     }
+
+    @Test
+    func coverageSummaryListsGapsOrReportsNone() {
+        #expect(DoctorRunner.coverageSummary([], total: 3) == "none")
+        #expect(DoctorRunner.coverageSummary(["app_opened", "session_started"], total: 4)
+            == "2/4 (app_opened, session_started)")
+    }
 }

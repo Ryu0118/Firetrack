@@ -15,6 +15,7 @@ package struct DoctorRunner {
         for error in report.errors {
             logger.info("  - \(error)")
         }
+        reportMetadataCoverage(configuration)
         let propertyID = GA4DesiredStateExtractor.propertyID(from: configuration, override: request.propertyID)
         logger.info("GA4 property ID: \(propertyID ?? "missing")")
         let serviceAccount = GA4DesiredStateExtractor.impersonatedServiceAccount(
@@ -23,6 +24,25 @@ package struct DoctorRunner {
         )
         logger.info("Impersonation service account: \(serviceAccount ?? "not configured")")
         await reportAuth(serviceAccount: serviceAccount)
+    }
+
+    /// Formats a coverage gap as a count plus the offending event names, or "none" when full.
+    package static func coverageSummary(_ missing: [String], total: Int) -> String {
+        missing.isEmpty ? "none" : "\(missing.count)/\(total) (\(missing.joined(separator: ", ")))"
+    }
+
+    /// Reports how much event metadata is filled in. These fields are never required —
+    /// the report just surfaces gaps that weaken later analysis (unowned events, events
+    /// with no documented fire condition) and lists the activation/retention anchors.
+    private func reportMetadataCoverage(_ configuration: AnalyticsTrackingConfiguration) {
+        let events = configuration.events
+        guard !events.isEmpty else { return }
+        let missingOwner = events.filter { $0.value.owner == nil }.keys.sorted()
+        let missingFireWhen = events.filter { $0.value.fireWhen == nil }.keys.sorted()
+        let retentionAnchors = events.filter { $0.value.retentionAnchor == true }.keys.sorted()
+        logger.info("Events without owner: \(Self.coverageSummary(missingOwner, total: events.count))")
+        logger.info("Events without fire_when: \(Self.coverageSummary(missingFireWhen, total: events.count))")
+        logger.info("Retention anchors: \(retentionAnchors.isEmpty ? "none" : retentionAnchors.joined(separator: ", "))")
     }
 
     /// Reports which authentication source can produce a GA4 token, using the same
