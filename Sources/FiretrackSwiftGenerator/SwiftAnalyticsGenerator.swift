@@ -44,6 +44,7 @@ package struct SwiftAnalyticsGenerator {
                 ResolvedEvent(
                     yamlName: eventName,
                     caseName: eventName.lowerCamelCased(),
+                    documentation: event.description,
                     parameters: effectiveParameters(for: event, configuration: context.configuration),
                 )
             }
@@ -117,6 +118,9 @@ package struct SwiftAnalyticsGenerator {
     @SwiftSourceBuilder
     private func eventCases(_ events: [ResolvedEvent]) -> [String] {
         for event in events {
+            if let documentation = singleLineDoc(event.documentation) {
+                "    /// \(documentation)"
+            }
             if event.parameters.isEmpty {
                 "    case \(event.caseName)"
             } else {
@@ -178,6 +182,18 @@ package struct SwiftAnalyticsGenerator {
         }
     }
 
+    /// Collapses a multi-line description into a single doc-comment line so the generated
+    /// `///` stays valid Swift. Returns nil when there is nothing to document.
+    private func singleLineDoc(_ text: String?) -> String? {
+        guard let text else { return nil }
+        let collapsed = text
+            .split(whereSeparator: \.isNewline)
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .joined(separator: " ")
+            .trimmingCharacters(in: .whitespaces)
+        return collapsed.isEmpty ? nil : collapsed
+    }
+
     private func associatedValues(for parameters: [(key: String, value: AnalyticsParameterConfiguration)]) -> String {
         parameters.map { name, parameter in
             let type = swiftType(for: parameter, parameterName: name)
@@ -237,5 +253,6 @@ private struct SwiftGenerationContext {
 private struct ResolvedEvent {
     var yamlName: String
     var caseName: String
+    var documentation: String?
     var parameters: [(key: String, value: AnalyticsParameterConfiguration)]
 }

@@ -41,4 +41,35 @@ struct SwiftGeneratorTests {
         ))
         #expect(first.contains("case driveRecordScreen = \"DriveRecordScreen\""))
     }
+
+    @Test
+    func eventDescriptionBecomesDocComment() throws {
+        let yaml = """
+        version: 1
+        events:
+          recording_completed:
+            description: |
+              Fired when a drive recording finishes.
+              Carries the distance travelled.
+            parameters:
+              distance_m:
+                type: double
+                required: true
+          app_opened:
+            parameters: {}
+        """
+        let configuration = try AnalyticsConfigurationLoader.load(yaml: yaml)
+        let generator = SwiftAnalyticsGenerator()
+
+        let source = try generator.generate(configuration: configuration, options: .init(accessLevel: .package))
+
+        #expect(!Parser.parse(source: source).hasError)
+        // Multi-line YAML description collapses to a single valid doc-comment line.
+        #expect(source.contains(
+            "    /// Fired when a drive recording finishes. Carries the distance travelled.",
+        ))
+        // An event without a description gets no doc comment.
+        #expect(!source.contains("/// \n    case appOpened"))
+        #expect(source.contains("    case appOpened"))
+    }
 }
