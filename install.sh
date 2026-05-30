@@ -1,7 +1,7 @@
 #!/bin/bash
 set -eu
 
-REPO="Ryu0118/Firetracker"
+REPO="Ryu0118/Firetrack"
 BIN_NAME="firetrack"
 INSTALL_DIR="${INSTALL_DIR:-$HOME/.local/bin}"
 FORCE="${FORCE:-}"

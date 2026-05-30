@@ -1,7 +1,7 @@
 # Firetrack
 
 Deterministic Firebase Analytics / GA4 Admin API toolkit. A single YAML file
-(`firetracker.yml`) is the source of truth: Firetrack validates it,
+(`firetrack.yml`) is the source of truth: Firetrack validates it,
 syncs missing GA4 custom definitions / key events / BigQuery links, and generates
 type-safe Swift event code from it.
 

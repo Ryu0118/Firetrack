@@ -1,4 +1,4 @@
-# SwiftLint configuration for Firetracker
+# SwiftLint configuration for Firetrack
 
 excluded:
   - .build
