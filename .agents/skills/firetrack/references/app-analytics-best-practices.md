@@ -139,6 +139,12 @@ Prefer coarse, bounded, and product-meaningful values:
 - `distance_bucket`, `duration_bucket`, `permission_status`, `failure_reason`,
   `entry_source`, `result`, `mode`.
 
+In Firetrack, mark any parameter that carries personal data `pii: true` (or mark
+the whole event `pii: true`). `validate` then rejects registering it as a GA4
+custom dimension or metric, so PII never reaches GA4 — Google forbids PII in
+custom definitions. A `pii` parameter can still be declared and logged locally;
+it just cannot become GA4 reporting config.
+
 ## Review checklist
 
 - Every event answers a real question.
