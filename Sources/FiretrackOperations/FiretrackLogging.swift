@@ -1,4 +1,3 @@
-import Foundation
 import Logging
 
 /// Package-wide logger used by every runner and formatter for user-facing output.

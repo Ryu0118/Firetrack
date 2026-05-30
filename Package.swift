@@ -28,7 +28,6 @@ let package = Package(
             dependencies: [
                 "FiretrackOperations",
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
-                .product(name: "Logging", package: "swift-log"),
             ],
         ),
         .target(
