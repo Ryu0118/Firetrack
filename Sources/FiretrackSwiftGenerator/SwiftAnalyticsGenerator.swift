@@ -10,11 +10,11 @@ package struct SwiftAnalyticsGenerator {
     /// Returns parseable Swift source for the supplied tracking configuration.
     package func generate(
         configuration: AnalyticsTrackingConfiguration,
-        options: SwiftAnalyticsGeneratorOptions = .init()
+        options: SwiftAnalyticsGeneratorOptions = .init(),
     ) throws -> String {
         let context = SwiftGenerationContext(
             configuration: configuration,
-            access: options.accessLevel.declarationPrefix
+            access: options.accessLevel.declarationPrefix,
         )
         let source = render {
             header()
@@ -70,15 +70,21 @@ package struct SwiftAnalyticsGenerator {
     private func allowedValueEnums(context: SwiftGenerationContext) -> [String] {
         let definitions = GA4DesiredStateExtractor.parameterDefinitions(context.configuration)
         for parameterName in definitions.keys.sorted() {
-            if let allowed = definitions[parameterName]?.allowed, !allowed.isEmpty {
-                "\(context.access)enum \(parameterName.upperCamelCased())Value: String, CaseIterable, Sendable {"
-                for value in allowed.sorted() {
-                    "    case \(value.lowerCamelCased()) = \"\(value)\""
-                }
-                "}"
-                ""
+            let allowed = definitions[parameterName]?.allowed ?? []
+            if !allowed.isEmpty {
+                allowedValueEnum(parameterName: parameterName, allowed: allowed, access: context.access)
             }
         }
+    }
+
+    @SwiftSourceBuilder
+    private func allowedValueEnum(parameterName: String, allowed: [String], access: String) -> [String] {
+        "\(access)enum \(parameterName.upperCamelCased())Value: String, CaseIterable, Sendable {"
+        for value in allowed.sorted() {
+            "    case \(value.lowerCamelCased()) = \"\(value)\""
+        }
+        "}"
+        ""
     }
 
     @SwiftSourceBuilder
@@ -131,7 +137,7 @@ package struct SwiftAnalyticsGenerator {
     private func parameterSwitchCase(
         eventName: String,
         event: AnalyticsEventConfiguration,
-        context: SwiftGenerationContext
+        context: SwiftGenerationContext,
     ) -> [String] {
         let parameters = effectiveParameters(for: event, configuration: context.configuration)
         if parameters.isEmpty {
@@ -148,7 +154,7 @@ package struct SwiftAnalyticsGenerator {
 
     @SwiftSourceBuilder
     private func parameterAssignments(
-        _ parameters: [(key: String, value: AnalyticsParameterConfiguration)]
+        _ parameters: [(key: String, value: AnalyticsParameterConfiguration)],
     ) -> [String] {
         for (name, parameter) in parameters {
             let localName = name.lowerCamelCased()
@@ -187,7 +193,7 @@ package struct SwiftAnalyticsGenerator {
 
     private func effectiveParameters(
         for event: AnalyticsEventConfiguration,
-        configuration: AnalyticsTrackingConfiguration
+        configuration: AnalyticsTrackingConfiguration,
     ) -> [(key: String, value: AnalyticsParameterConfiguration)] {
         event.parameters
             .map { name, parameter in

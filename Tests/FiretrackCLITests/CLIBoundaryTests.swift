@@ -9,7 +9,7 @@ struct CLIBoundaryTests {
             .deletingLastPathComponent()
             .deletingLastPathComponent()
         let cliRoot = root.appending(path: "Sources/FiretrackCLI")
-        let files = try FileManager.default.subpathsOfDirectory(atPath: cliRoot.path)
+        let files = try FileManager.default.subpathsOfDirectory(atPath: cliRoot.path(percentEncoded: false))
             .filter { $0.hasSuffix(".swift") }
         let source = try files
             .map { try String(contentsOf: cliRoot.appending(path: $0), encoding: .utf8) }

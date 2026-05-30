@@ -6,7 +6,7 @@ package enum GA4DesiredStateExtractor {
     package static func propertyID(
         from configuration: AnalyticsTrackingConfiguration,
         override: String? = nil,
-        environment: [String: String] = ProcessInfo.processInfo.environment
+        environment: [String: String] = ProcessInfo.processInfo.environment,
     ) -> String? {
         configuredValue(override, environment["GA4_PROPERTY_ID"], configuration.destinations?.ga4?.propertyID)
     }
@@ -15,12 +15,12 @@ package enum GA4DesiredStateExtractor {
     package static func impersonatedServiceAccount(
         from configuration: AnalyticsTrackingConfiguration,
         override: String? = nil,
-        environment: [String: String] = ProcessInfo.processInfo.environment
+        environment: [String: String] = ProcessInfo.processInfo.environment,
     ) -> String? {
         configuredValue(
             override,
             environment["GA4_IMPERSONATE_SERVICE_ACCOUNT"],
-            configuration.ga4Sync?.impersonateServiceAccount
+            configuration.ga4Sync?.impersonateServiceAccount,
         )
     }
 
@@ -28,7 +28,7 @@ package enum GA4DesiredStateExtractor {
     package static func extract(
         from configuration: AnalyticsTrackingConfiguration,
         options: GA4DesiredStateOptions = .init(),
-        environment: [String: String] = ProcessInfo.processInfo.environment
+        environment: [String: String] = ProcessInfo.processInfo.environment,
     ) -> GA4DesiredState {
         let definitions = parameterDefinitions(configuration)
         return .init(
@@ -38,23 +38,19 @@ package enum GA4DesiredStateExtractor {
             bigQueryLink: options.skipBigQuery ? nil : bigQueryLinkConfig(
                 configuration,
                 override: options.bigQueryProjectNumberOverride,
-                environment: environment
-            )
+                environment: environment,
+            ),
         )
     }
 
     /// Returns merged global and event-local parameter definitions.
     package static func parameterDefinitions(
-        _ configuration: AnalyticsTrackingConfiguration
+        _ configuration: AnalyticsTrackingConfiguration,
     ) -> [String: AnalyticsParameterConfiguration] {
         var definitions = configuration.globalParameters
         for event in configuration.events.values {
             for (parameterName, parameter) in event.parameters {
-                if let existing = definitions[parameterName] {
-                    definitions[parameterName] = existing.merging(parameter)
-                } else {
-                    definitions[parameterName] = parameter
-                }
+                definitions[parameterName] = definitions[parameterName]?.merging(parameter) ?? parameter
             }
         }
         return definitions
@@ -86,7 +82,7 @@ package enum GA4DesiredStateExtractor {
 
     private static func customDimensions(
         from definitions: [String: AnalyticsParameterConfiguration],
-        skip: Bool
+        skip: Bool,
     ) -> [GA4CustomDimension] {
         skip ? [] : definitions
             .filter { $0.value.ga4CustomDimension == true }
@@ -95,7 +91,7 @@ package enum GA4DesiredStateExtractor {
                     parameterName: name,
                     displayName: humanize(name),
                     description: "MyApp analytics parameter: \(name)",
-                    scope: "EVENT"
+                    scope: "EVENT",
                 )
             }
             .sorted { $0.parameterName < $1.parameterName }
@@ -103,7 +99,7 @@ package enum GA4DesiredStateExtractor {
 
     private static func customMetrics(
         from definitions: [String: AnalyticsParameterConfiguration],
-        skip: Bool
+        skip: Bool,
     ) -> [GA4CustomMetric] {
         skip ? [] : definitions
             .filter { $0.value.ga4CustomMetric == true }
@@ -113,7 +109,7 @@ package enum GA4DesiredStateExtractor {
                     displayName: humanize(name),
                     description: "MyApp analytics metric: \(name)",
                     measurementUnit: measurementUnit(name),
-                    scope: "EVENT"
+                    scope: "EVENT",
                 )
             }
             .sorted { $0.parameterName < $1.parameterName }
@@ -121,7 +117,7 @@ package enum GA4DesiredStateExtractor {
 
     private static func keyEvents(
         from configuration: AnalyticsTrackingConfiguration,
-        skip: Bool
+        skip: Bool,
     ) -> [GA4KeyEvent] {
         skip ? [] : (configuration.ga4Sync?.keyEvents ?? [])
             .sorted()
@@ -133,14 +129,14 @@ package enum GA4DesiredStateExtractor {
     private static func bigQueryLinkConfig(
         _ configuration: AnalyticsTrackingConfiguration,
         override: String?,
-        environment: [String: String]
+        environment: [String: String],
     ) -> GA4BigQueryLink? {
         guard configuration.ga4Sync?.bigQueryLink?.enabled == true else { return nil }
         guard let projectNumber = configuredValue(
             override,
             environment["GA4_BIGQUERY_PROJECT_NUMBER"],
             configuration.ga4Sync?.bigQueryLink?.projectNumber,
-            configuration.destinations?.bigquery?.projectNumber
+            configuration.destinations?.bigquery?.projectNumber,
         ) else {
             return nil
         }
@@ -149,7 +145,7 @@ package enum GA4DesiredStateExtractor {
             project: "projects/\(projectNumber)",
             dailyExportEnabled: link?.dailyExportEnabled ?? true,
             streamingExportEnabled: link?.streamingExportEnabled ?? false,
-            datasetLocation: link?.datasetLocation ?? "US"
+            datasetLocation: link?.datasetLocation ?? "US",
         )
     }
 }

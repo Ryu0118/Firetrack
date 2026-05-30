@@ -18,7 +18,10 @@ struct OperationsTests {
         try "existing".write(to: output, atomically: true, encoding: .utf8)
 
         #expect(throws: (any Error).self) {
-            try GenerateRunner().run(.init(planPath: plan.path, outputPath: output.path))
+            try GenerateRunner().run(.init(
+                planPath: plan.path(percentEncoded: false),
+                outputPath: output.path(percentEncoded: false),
+            ))
         }
     }
 }
