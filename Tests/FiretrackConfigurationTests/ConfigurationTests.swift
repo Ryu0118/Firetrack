@@ -144,6 +144,59 @@ struct ConfigurationTests {
     }
 
     @Test
+    func globalAndEventParameterTypeConflictIsRejected() throws {
+        // A global metric redeclared with a conflicting type in an event must not slip past
+        // validation — otherwise GA4 would get a numeric metric backing a string parameter.
+        let yaml = """
+        version: 1
+        global_parameters:
+          score:
+            type: int
+            ga4_custom_metric: true
+        events:
+          level_up:
+            parameters:
+              score:
+                type: string
+        """
+
+        let configuration = try AnalyticsConfigurationLoader.load(yaml: yaml)
+        let errors = AnalyticsConfigurationValidator.validate(configuration).errors.map(\.description)
+
+        #expect(errors.contains { $0.contains("redefines score as string, previously int") })
+        #expect(errors == errors.sorted())
+    }
+
+    @Test
+    func divergentAllowedAcrossEventsIsRejectedEvenWhenGlobalOmitsIt() throws {
+        // The global omits `allowed`, so two events that set different `allowed` sets must still
+        // conflict — the consistency check fills nils forward rather than only comparing each
+        // occurrence against the (nil) global.
+        let yaml = """
+        version: 1
+        global_parameters:
+          mode:
+            type: enum
+        events:
+          first_event:
+            parameters:
+              mode:
+                type: enum
+                allowed: [fast]
+          second_event:
+            parameters:
+              mode:
+                type: enum
+                allowed: [slow]
+        """
+
+        let configuration = try AnalyticsConfigurationLoader.load(yaml: yaml)
+        let errors = AnalyticsConfigurationValidator.validate(configuration).errors.map(\.description)
+
+        #expect(errors.contains { $0.contains("mode has conflicting allowed values") })
+    }
+
+    @Test
     func piiParameterWithoutGA4RegistrationIsValid() throws {
         let yaml = """
         version: 1

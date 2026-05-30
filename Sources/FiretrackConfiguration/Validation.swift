@@ -33,6 +33,22 @@ package enum AnalyticsConfigurationValidator {
         var errors: [AnalyticsConfigurationValidationError] = []
         var seenParameters: [String: AnalyticsParameterConfiguration] = [:]
 
+        // Seed global parameters into the consistency map first, so an event-local
+        // redefinition of the same name is reconciled against the global definition
+        // (otherwise a global metric could be redeclared with a conflicting type and
+        // slip past both the per-occurrence metric-type check and GA4 sync).
+        for (parameterName, parameter) in configuration.globalParameters.sorted(by: { $0.key < $1.key }) {
+            let path = "global_parameters.\(parameterName)"
+            validateParameter(parameter, name: parameterName, path: path, eventIsPII: false, errors: &errors)
+            validateConsistentDefinition(
+                parameter,
+                name: parameterName,
+                path: path,
+                seen: &seenParameters,
+                errors: &errors,
+            )
+        }
+
         for (eventName, event) in configuration.events.sorted(by: { $0.key < $1.key }) {
             validateName(eventName, kind: "event", path: "events.\(eventName)", errors: &errors)
 
@@ -53,16 +69,6 @@ package enum AnalyticsConfigurationValidator {
                     errors: &errors,
                 )
             }
-        }
-
-        for (parameterName, parameter) in configuration.globalParameters.sorted(by: { $0.key < $1.key }) {
-            validateParameter(
-                parameter,
-                name: parameterName,
-                path: "global_parameters.\(parameterName)",
-                eventIsPII: false,
-                errors: &errors,
-            )
         }
 
         for keyEvent in configuration.ga4Sync?.keyEvents ?? [] {
@@ -164,30 +170,38 @@ package enum AnalyticsConfigurationValidator {
             seen[name] = parameter
             return
         }
+        // `type` is non-optional, so it is always compared. Optional fields conflict only when
+        // both occurrences set them to different values — a nil means "inherit", not "disagree".
+        // Merging the occurrence back into `seen` fills nils forward so a later occurrence is
+        // checked against the established non-nil value, keeping the merge order-independent.
         if previous.type != parameter.type {
             errors.append(.init(
                 path: "\(path).type",
                 message: "parameter redefines \(name) as \(parameter.type.rawValue), previously \(previous.type.rawValue)",
             ))
         }
-        if previous.allowed != parameter.allowed {
+        if let previousAllowed = previous.allowed, let allowed = parameter.allowed, previousAllowed != allowed {
             errors.append(.init(
                 path: "\(path).allowed",
                 message: "parameter \(name) has conflicting allowed values across definitions",
             ))
         }
-        if previous.ga4CustomDimension != parameter.ga4CustomDimension {
+        if let previousFlag = previous.ga4CustomDimension,
+           let flag = parameter.ga4CustomDimension,
+           previousFlag != flag
+        {
             errors.append(.init(
                 path: "\(path).ga4_custom_dimension",
                 message: "parameter \(name) has conflicting ga4_custom_dimension across definitions",
             ))
         }
-        if previous.ga4CustomMetric != parameter.ga4CustomMetric {
+        if let previousFlag = previous.ga4CustomMetric, let flag = parameter.ga4CustomMetric, previousFlag != flag {
             errors.append(.init(
                 path: "\(path).ga4_custom_metric",
                 message: "parameter \(name) has conflicting ga4_custom_metric across definitions",
             ))
         }
+        seen[name] = previous.merging(parameter)
     }
 
     private static func validateSyncRequiredFields(
