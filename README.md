@@ -153,11 +153,6 @@ firetrack doctor                        # diagnose GA4 readiness before sync (au
 
 Every command takes `--plan <path>` (default `Documents/analytics-tracking-plan.yaml`).
 
-**`validate` vs `doctor`**: `validate` checks the plan *file* alone — schema, snake_case
-names, type/enum rules — with no network or credentials. `doctor` re-runs that check and
-then probes whether you can actually *sync*: GA4 property ID, service account, and a live
-`gcloud` token. Use `validate` in CI on every change; run `doctor` before your first `ga4 sync`.
-
 | Command | Key flags |
 |---------|-----------|
 | `generate` | `--output` (required), `--access-level internal\|package\|public`, `--overwrite` |
