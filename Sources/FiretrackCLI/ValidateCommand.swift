@@ -8,10 +8,10 @@ struct ValidateCommand: ParsableCommand {
         abstract: "Validate the tracking-plan file: schema, names, and rules (offline, no auth).",
     )
 
-    @Option(name: .long, help: "Tracking plan YAML path.")
-    var plan: String = "Documents/analytics-tracking-plan.yaml"
+    @Option(name: .customLong("config"), help: "Tracking-plan YAML path (default: ./firetrack.yml).")
+    var config: String = "firetrack.yml"
 
     func run() throws {
-        try ValidateRunner().run(.init(planPath: plan))
+        try ValidateRunner().run(.init(planPath: config))
     }
 }

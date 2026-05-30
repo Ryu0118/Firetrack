@@ -5,7 +5,7 @@ package struct ValidateRequest: Equatable {
     var planPath: String
 
     /// Creates a validation request.
-    package init(planPath: String = "Documents/analytics-tracking-plan.yaml") {
+    package init(planPath: String = "firetrack.yml") {
         self.planPath = planPath
     }
 }
@@ -23,7 +23,7 @@ package struct GA4Request: Equatable {
 
     /// Creates a GA4 operation request.
     package init(
-        planPath: String = "Documents/analytics-tracking-plan.yaml",
+        planPath: String = "firetrack.yml",
         propertyID: String? = nil,
         bigQueryProjectNumber: String? = nil,
         impersonateServiceAccount: String? = nil,
@@ -52,7 +52,7 @@ package struct GenerateRequest: Equatable {
 
     /// Creates a Swift generation request.
     package init(
-        planPath: String = "Documents/analytics-tracking-plan.yaml",
+        planPath: String = "firetrack.yml",
         outputPath: String,
         accessLevel: String = "internal",
         overwrite: Bool = false,

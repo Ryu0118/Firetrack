@@ -3,8 +3,8 @@ import FiretrackOperations
 import Foundation
 
 struct GA4Options: ParsableArguments {
-    @Option(name: .long, help: "Tracking plan YAML path.")
-    var plan: String = "Documents/analytics-tracking-plan.yaml"
+    @Option(name: .customLong("config"), help: "Tracking-plan YAML path (default: ./firetrack.yml).")
+    var config: String = "firetrack.yml"
 
     @Option(name: .long, help: "GA4 property ID override.")
     var propertyID: String?
@@ -28,7 +28,7 @@ struct GA4Options: ParsableArguments {
 
     func request(apply: Bool) -> GA4Request {
         .init(
-            planPath: plan,
+            planPath: config,
             propertyID: propertyID,
             bigQueryProjectNumber: bigQueryProjectNumber,
             impersonateServiceAccount: impersonateServiceAccount,

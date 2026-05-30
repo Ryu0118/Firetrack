@@ -8,8 +8,8 @@ struct GenerateCommand: ParsableCommand {
         abstract: "Generate a Swift analytics contract from YAML.",
     )
 
-    @Option(name: .long, help: "Tracking plan YAML path.")
-    var plan: String = "Documents/analytics-tracking-plan.yaml"
+    @Option(name: .customLong("config"), help: "Tracking-plan YAML path (default: ./firetrack.yml).")
+    var config: String = "firetrack.yml"
 
     @Option(name: .long, help: "Generated Swift output path.")
     var output: String
@@ -24,7 +24,7 @@ struct GenerateCommand: ParsableCommand {
 
     func run() throws {
         try GenerateRunner().run(.init(
-            planPath: plan,
+            planPath: config,
             outputPath: output,
             accessLevel: accessLevel,
             overwrite: overwrite,
