@@ -7,7 +7,7 @@
 
 **One YAML file is your analytics contract. Firetrack keeps your code, your GA4 config, and your tracking plan from ever drifting apart.**
 
-Analytics rot the moment three things disagree: the tracking plan in a spreadsheet, the event names hardcoded in your app, and the custom dimensions configured by hand in the GA4 console. Firetrack makes `analytics-tracking-plan.yaml` the single source of truth — it validates the contract, generates type-safe Swift event code, and pushes missing definitions into GA4 over the Admin API. Change the YAML, regenerate, sync. No console clicking, no typo'd event names, no drift.
+Analytics rot the moment three things disagree: the tracking plan in a spreadsheet, the event names hardcoded in your app, and the custom dimensions configured by hand in the GA4 console. Firetrack makes `firetrack.yml` the single source of truth — it validates the contract, generates type-safe Swift event code, and pushes missing definitions into GA4 over the Admin API. Change the YAML, regenerate, sync. No console clicking, no typo'd event names, no drift.
 
 ## Features
 
@@ -47,7 +47,7 @@ Verify with `firetrack --version`. Requires **macOS 26+**.
 
 ## Quick start
 
-1. Write `Documents/analytics-tracking-plan.yaml`:
+1. Write `firetrack.yml` at your project root:
 
    ```yaml
    version: 1
@@ -207,7 +207,8 @@ firetrack ga4 sync --apply              # create the missing GA4 resources
 firetrack doctor                        # diagnose GA4 readiness before sync (auth + property + token)
 ```
 
-Every command takes `--plan <path>` (default `Documents/analytics-tracking-plan.yaml`).
+Every command reads `firetrack.yml` from the current directory by default; pass
+`--config <path>` to point at a plan anywhere else.
 
 | Command | Key flags |
 |---------|-----------|
@@ -261,7 +262,7 @@ The build fails if a plan change wasn't regenerated and committed.
 ## Agent Skills
 
 Firetrack ships a **`firetracker`** [Agent Skill](https://agentskills.io) so your AI agent
-can install the CLI and adopt it in a project for you — set up `analytics-tracking-plan.yaml`,
+can install the CLI and adopt it in a project for you — set up `firetrack.yml`,
 generate the Swift contract, and wire it into CI. Install it:
 
 ```bash

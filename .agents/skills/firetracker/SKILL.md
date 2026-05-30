@@ -1,11 +1,11 @@
 ---
 name: firetracker
-description: Install the Firetrack CLI and adopt it in a project. Use when a user wants to add Firetrack to their app, set up an analytics-tracking-plan.yaml as the source of truth for Firebase Analytics / GA4, install the firetrack binary (install script, mise, or nest), generate type-safe Swift analytics code, or wire Firetrack validate/generate into CI. Triggers include "install firetrack", "set up firetrack", "add analytics tracking plan", "adopt firetrack", and "firetrack in my project".
+description: Install the Firetrack CLI and adopt it in a project. Use when a user wants to add Firetrack to their app, set up a firetrack.yml tracking plan as the source of truth for Firebase Analytics / GA4, install the firetrack binary (install script, mise, or nest), generate type-safe Swift analytics code, or wire Firetrack validate/generate into CI. Triggers include "install firetrack", "set up firetrack", "add analytics tracking plan", "adopt firetrack", and "firetrack in my project".
 ---
 
 # Firetrack Adoption
 
-Firetrack turns one YAML file (`analytics-tracking-plan.yaml`) into the source of
+Firetrack turns one YAML file (`firetrack.yml`) into the source of
 truth for Firebase Analytics / GA4: it **validates** the contract, **syncs** missing
 GA4 custom dimensions/metrics/key-events/BigQuery links, and **generates** type-safe
 Swift event code. This skill covers installing the CLI and adopting it in a project.
@@ -42,8 +42,8 @@ Verify: `firetrack --version`. Requires **macOS 26+**.
 
 ## 2. Create the tracking plan
 
-Place `analytics-tracking-plan.yaml` at the project root (or `Documents/`). Minimal
-valid plan:
+Place `firetrack.yml` at the working-directory root (the default `--config` path;
+override with `--config <path>` to put it anywhere). Minimal valid plan:
 
 ```yaml
 version: 1
@@ -70,8 +70,8 @@ naming rules, GA4 custom dimension/metric flags): see
 ## 3. Validate and generate
 
 ```bash
-firetrack validate --plan analytics-tracking-plan.yaml
-firetrack generate --plan analytics-tracking-plan.yaml \
+firetrack validate --config firetrack.yml
+firetrack generate --config firetrack.yml \
   --output Sources/Analytics/GeneratedAnalytics.swift \
   --access-level internal --overwrite
 ```
@@ -89,9 +89,9 @@ Dry-run first, then apply. Apply only **creates** missing resources — it never
 archives, or renames remote GA4 resources.
 
 ```bash
-firetrack ga4 diff --plan analytics-tracking-plan.yaml          # dry-run
-firetrack ga4 sync --plan analytics-tracking-plan.yaml --apply  # create missing
-firetrack doctor --plan analytics-tracking-plan.yaml            # check auth/config
+firetrack ga4 diff --config firetrack.yml          # dry-run
+firetrack ga4 sync --config firetrack.yml --apply  # create missing
+firetrack doctor --config firetrack.yml            # check auth/config
 ```
 
 Auth resolves in order: `GOOGLE_OAUTH_ACCESS_TOKEN` → `ga4_sync.impersonate_service_account`
@@ -103,9 +103,9 @@ Auth resolves in order: `GOOGLE_OAUTH_ACCESS_TOKEN` → `ga4_sync.impersonate_se
 Validate the plan and assert generated code is up to date on every PR:
 
 ```yaml
-- run: firetrack validate --plan analytics-tracking-plan.yaml
+- run: firetrack validate --config firetrack.yml
 - run: |
-    firetrack generate --plan analytics-tracking-plan.yaml \
+    firetrack generate --config firetrack.yml \
       --output Sources/Analytics/GeneratedAnalytics.swift --overwrite
     git diff --exit-code Sources/Analytics/GeneratedAnalytics.swift
 ```

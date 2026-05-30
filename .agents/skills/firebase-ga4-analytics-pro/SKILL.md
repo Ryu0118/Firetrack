@@ -9,7 +9,7 @@ Use Firetrack as the preferred local CLI for this repository.
 
 ## Contract First
 
-Declare events, screens, parameters, key events, custom dimensions, custom metrics, and BigQuery link intent in `Documents/analytics-tracking-plan.yaml`.
+Declare events, screens, parameters, key events, custom dimensions, custom metrics, and BigQuery link intent in `firetrack.yml`.
 
 Benefits:
 
@@ -31,11 +31,11 @@ For product analytics, make sure the plan can answer:
 ## Firetrack Commands
 
 ```bash
-swift run --package-path Firetrack firetrack validate --plan Documents/analytics-tracking-plan.yaml
-swift run --package-path Firetrack firetrack ga4 diff --plan Documents/analytics-tracking-plan.yaml
-swift run --package-path Firetrack firetrack ga4 sync --plan Documents/analytics-tracking-plan.yaml --apply
-swift run --package-path Firetrack firetrack generate --plan Documents/analytics-tracking-plan.yaml --output /tmp/GeneratedAnalytics.swift --access-level public --overwrite
-swift run --package-path Firetrack firetrack doctor --plan Documents/analytics-tracking-plan.yaml
+swift run --package-path Firetrack firetrack validate --config firetrack.yml
+swift run --package-path Firetrack firetrack ga4 diff --config firetrack.yml
+swift run --package-path Firetrack firetrack ga4 sync --config firetrack.yml --apply
+swift run --package-path Firetrack firetrack generate --config firetrack.yml --output /tmp/GeneratedAnalytics.swift --access-level public --overwrite
+swift run --package-path Firetrack firetrack doctor --config firetrack.yml
 ```
 
 ## GA4 Setup
