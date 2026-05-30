@@ -33,7 +33,8 @@ For product analytics, make sure the plan can answer:
 ```bash
 swift run --package-path Firetrack firetrack validate --config firetrack.yml
 swift run --package-path Firetrack firetrack ga4 diff --config firetrack.yml
-swift run --package-path Firetrack firetrack ga4 sync --config firetrack.yml --apply
+swift run --package-path Firetrack firetrack ga4 sync --config firetrack.yml --dry-run  # preview
+swift run --package-path Firetrack firetrack ga4 sync --config firetrack.yml            # apply
 swift run --package-path Firetrack firetrack generate --config firetrack.yml --output /tmp/GeneratedAnalytics.swift --access-level public --overwrite
 swift run --package-path Firetrack firetrack doctor --config firetrack.yml
 ```
