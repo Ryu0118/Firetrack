@@ -1,0 +1,32 @@
+import FiretrackConfiguration
+import FiretrackSwiftGenerator
+import Foundation
+
+/// Runner for the `firetrack generate` command.
+package struct GenerateRunner {
+    /// Creates a generate runner.
+    package init() {}
+
+    /// Generates a Swift analytics contract from YAML.
+    package func run(_ request: GenerateRequest) throws {
+        let configuration = try AnalyticsConfigurationLoader.load(path: request.planPath)
+        try ConfigurationValidationGate.validate(configuration)
+        guard let accessLevel = SwiftAccessLevel(rawValue: request.accessLevel) else {
+            throw OperationsError.invalidAccessLevel(request.accessLevel)
+        }
+        let outputURL = URL(filePath: request.outputPath)
+        if FileManager.default.fileExists(atPath: outputURL.path), !request.overwrite {
+            throw OperationsError.outputExists(outputURL.path)
+        }
+        let source = try SwiftAnalyticsGenerator().generate(
+            configuration: configuration,
+            options: .init(accessLevel: accessLevel)
+        )
+        try FileManager.default.createDirectory(
+            at: outputURL.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try source.write(to: outputURL, atomically: true, encoding: .utf8)
+        print("Generated Swift analytics contract: \(outputURL.path)")
+    }
+}

@@ -1,0 +1,57 @@
+version: 1
+platforms:
+  - ios
+destinations:
+  firebase_analytics:
+    enabled: true
+  ga4:
+    property_id: "TODO"
+  bigquery:
+    project_id: TODO
+    project_number: "TODO"
+    dataset: analytics_TODO
+
+ga4_sync:
+  impersonate_service_account: TODO
+  key_events:
+    - recording_completed
+  bigquery_link:
+    enabled: true
+    project_number: "TODO"
+    daily_export_enabled: true
+    streaming_export_enabled: true
+    dataset_location: US
+
+global_parameters:
+  source:
+    type: enum
+    allowed:
+      - app
+      - widget
+    ga4_custom_dimension: true
+
+screens:
+  DriveRecordScreen:
+    route: tab.record
+    owner: product
+    primary_action: recording_started
+
+events:
+  recording_completed:
+    description: Drive recording completed successfully.
+    owner: product
+    retention_anchor: true
+    pii: false
+    parameters:
+      source:
+        type: enum
+        required: true
+        ga4_custom_dimension: true
+      distance_m:
+        type: double
+        required: true
+        ga4_custom_metric: true
+      duration_sec:
+        type: int
+        required: false
+        ga4_custom_metric: true
