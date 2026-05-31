@@ -77,4 +77,24 @@ struct OperationsTests {
         #expect(DoctorRunner.coverageSummary(["app_opened", "session_started"], total: 4)
             == "2/4 (app_opened, session_started)")
     }
+
+    @Test
+    func tokenProviderUsesRequestedScopeForImpersonation() throws {
+        let provider = GA4ContextFactory.tokenProvider(
+            serviceAccount: "analytics@example.iam.gserviceaccount.com",
+            scope: .edit,
+            environment: [:],
+        )
+
+        let impersonated = try #require(provider as? ImpersonatedAccessTokenProvider)
+        #expect(impersonated.scopes == [.edit])
+    }
+
+    @Test
+    func identifierValidatorAcceptsNumericIDsOnly() {
+        #expect(GA4IdentifierValidator.isNumeric("123"))
+        #expect(!GA4IdentifierValidator.isNumeric("projects/123"))
+        #expect(GA4IdentifierValidator.isProjectReference("projects/456"))
+        #expect(!GA4IdentifierValidator.isProjectReference("projects/example"))
+    }
 }

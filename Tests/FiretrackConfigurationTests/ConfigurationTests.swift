@@ -89,58 +89,51 @@ struct ConfigurationTests {
     }
 
     @Test(
-        "A PII parameter registered as a GA4 custom definition is rejected",
+        "strict YAML schema rejects unsupported shapes",
         arguments: [
-            // Param-level pii on a custom dimension.
+            (
+                yaml: "version: 2",
+                expectedErrorFragment: "only schema version 1 is supported",
+            ),
             (
                 yaml: """
                 version: 1
                 events:
-                  search_performed:
+                  app_opened:
+                    unknown_field: true
+                """,
+                expectedErrorFragment: "events.app_opened.unknown_field: unknown key",
+            ),
+            (
+                yaml: """
+                version: 1
+                events:
+                  app_opened:
                     parameters:
-                      query_text:
+                      source:
                         type: string
-                        pii: true
-                        ga4_custom_dimension: true
+                        requird: true
                 """,
-                expectedErrorFragment: "events.search_performed.parameters.query_text.ga4_custom_dimension",
+                expectedErrorFragment: "requird: unknown key",
             ),
-            // Param-level pii on a custom metric.
             (
                 yaml: """
                 version: 1
-                events:
-                  search_performed:
-                    parameters:
-                      result_count:
-                        type: int
-                        pii: true
-                        ga4_custom_metric: true
-                """,
-                expectedErrorFragment: "events.search_performed.parameters.result_count.ga4_custom_metric",
-            ),
-            // Event-level pii propagates to a registered parameter.
-            (
-                yaml: """
                 version: 1
-                events:
-                  profile_viewed:
-                    pii: true
-                    parameters:
-                      viewer_role:
-                        type: enum
-                        allowed: [self, other]
-                        ga4_custom_dimension: true
                 """,
-                expectedErrorFragment: "events.profile_viewed.parameters.viewer_role.ga4_custom_dimension",
+                expectedErrorFragment: "duplicated key(s): 'version'",
             ),
         ],
     )
-    func piiParameterCannotBecomeGA4ReportingConfig(yaml: String, expectedErrorFragment: String) throws {
-        let configuration = try AnalyticsConfigurationLoader.load(yaml: yaml)
-        let errors = AnalyticsConfigurationValidator.validate(configuration).errors.map(\.description)
-        #expect(errors.contains { $0.contains(expectedErrorFragment) && $0.contains("PII parameter") })
-        #expect(errors == errors.sorted())
+    func strictYAMLSchemaRejectsUnsupportedShapes(yaml: String, expectedErrorFragment: String) {
+        #expect(throws: (any Error).self) {
+            try AnalyticsConfigurationLoader.load(yaml: yaml)
+        }
+        do {
+            _ = try AnalyticsConfigurationLoader.load(yaml: yaml)
+        } catch {
+            #expect(String(describing: error).contains(expectedErrorFragment))
+        }
     }
 
     @Test
@@ -307,28 +300,6 @@ struct ConfigurationTests {
         let errors = AnalyticsConfigurationValidator.validate(configuration).errors.map(\.description)
         #expect(errors.contains { $0.contains("more than 27 custom item parameters") })
     }
-
-    @Test
-    func piiParameterWithoutGA4RegistrationIsValid() throws {
-        let yaml = """
-        version: 1
-        events:
-          note_saved:
-            pii: true
-            parameters:
-              note_body:
-                type: string
-                pii: true
-          recording_completed:
-            parameters:
-              distance_m:
-                type: double
-                ga4_custom_metric: true
-        """
-
-        let configuration = try AnalyticsConfigurationLoader.load(yaml: yaml)
-        #expect(AnalyticsConfigurationValidator.validate(configuration).isValid)
-    }
 }
 
 private let validTrackingPlanYAML = """
@@ -359,7 +330,6 @@ screens:
     route: tab.record
 events:
   recording_completed:
-    pii: false
     parameters:
       source:
         type: enum

@@ -50,7 +50,7 @@ struct GA4Tests {
     }
 
     @Test
-    func reverserScaffoldsConfigurationFromRemoteState() {
+    func reverserScaffoldsConfigurationFromRemoteState() throws {
         let remote = GA4RemoteState(
             customDimensions: [.init(parameterName: "source", displayName: "Source", description: "where from")],
             customMetrics: [.init(parameterName: "distance_m", displayName: "Distance", measurementUnit: "METERS")],
@@ -66,10 +66,10 @@ struct GA4Tests {
         #expect(configuration.ga4Sync?.bigQueryLink?.projectNumber == "456")
         #expect(configuration.events["recording_completed"] != nil)
 
-        let dimension = try? #require(configuration.globalParameters["source"])
-        #expect(dimension?.type == .string)
-        #expect(dimension?.ga4CustomDimension == true)
-        #expect(dimension?.displayName == "Source")
+        let dimension = try #require(configuration.globalParameters["source"])
+        #expect(dimension.type == .string)
+        #expect(dimension.ga4CustomDimension == true)
+        #expect(dimension.displayName == "Source")
 
         let metric = configuration.globalParameters["distance_m"]
         #expect(metric?.type == .double)
@@ -168,45 +168,62 @@ struct GA4Tests {
     }
 
     @Test
-    func dotEnvParsesCommentsQuotesAndFirstEquals() throws {
-        let directory = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
-        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        try """
-        # a comment
-        export GOOGLE_OAUTH_ACCESS_TOKEN="ya29.abc=def"
-
-        QUOTED='single'
-        BARE = plain
-        """.write(to: directory.appending(path: ".env"), atomically: true, encoding: .utf8)
-
-        let env = DotEnv.mergedEnvironment(directory: directory.path(percentEncoded: false), processEnvironment: [:])
-        #expect(env["GOOGLE_OAUTH_ACCESS_TOKEN"] == "ya29.abc=def") // first '=' split, quotes stripped, export dropped
-        #expect(env["QUOTED"] == "single")
-        #expect(env["BARE"] == "plain")
+    func environmentTokenProviderRejectsControlCharacters() async {
+        let provider = EnvironmentAccessTokenProvider(environment: [
+            "GOOGLE_OAUTH_ACCESS_TOKEN": "unsafe\nvalue",
+        ])
+        await #expect(throws: (any Error).self) {
+            try await provider.accessToken()
+        }
     }
 
     @Test
-    func dotEnvLetsExportedVariableWinOverFile() throws {
-        let directory = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
-        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        try "GOOGLE_OAUTH_ACCESS_TOKEN=from_dotenv"
-            .write(to: directory.appending(path: ".env"), atomically: true, encoding: .utf8)
-
-        let env = DotEnv.mergedEnvironment(
-            directory: directory.path(percentEncoded: false),
-            processEnvironment: ["GOOGLE_OAUTH_ACCESS_TOKEN": "from_shell"],
-        )
-        #expect(env["GOOGLE_OAUTH_ACCESS_TOKEN"] == "from_shell") // exported var wins over .env
+    func diagnosticSanitizerRedactsTokensAndControlCharacters() {
+        let value = DiagnosticSanitizer.sanitize("\u{001B}[31mBearer ya29.secret-value")
+        #expect(!value.contains("\u{001B}"))
+        #expect(!value.contains("secret-value"))
+        #expect(value.contains("<redacted>"))
     }
 
     @Test
-    func dotEnvIsSilentNoOpWhenAbsent() {
-        let directory = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
-        let env = DotEnv.mergedEnvironment(
-            directory: directory.path(percentEncoded: false),
-            processEnvironment: ["A": "1"],
+    func productionHTTPClientRejectsUntrustedDestinations() async throws {
+        let client = URLSessionGA4HTTPClient()
+        let urls = [
+            "https://example.com/steal",
+            "https://attacker@analyticsadmin.googleapis.com/steal",
+            "https://analyticsadmin.googleapis.com:8443/steal",
+        ]
+        for value in urls {
+            let url = try #require(URL(string: value))
+            await #expect(throws: (any Error).self) {
+                try await client.send(.init(
+                    method: .get,
+                    url: url,
+                    token: "secret",
+                    body: nil,
+                ))
+            }
+        }
+    }
+
+    @Test
+    func impersonationRequestsConfiguredScope() async throws {
+        let http = RecordingHTTPClient(response: .init(
+            statusCode: 200,
+            body: Data(#"{"accessToken":"impersonated"}"#.utf8),
+        ))
+        let provider = ImpersonatedAccessTokenProvider(
+            serviceAccount: "analytics@example.iam.gserviceaccount.com",
+            baseProvider: StaticAccessTokenProvider(token: "base"),
+            httpClient: http,
+            scopes: [.readonly],
         )
-        #expect(env == ["A": "1"])
+
+        #expect(try await provider.accessToken() == "impersonated")
+        let request = try #require(await http.requests.first)
+        let body = try #require(request.body)
+        #expect(String(data: body, encoding: .utf8)?.contains("analytics.readonly") == true)
+        #expect(String(data: body, encoding: .utf8)?.contains("analytics.edit") == false)
     }
 
     @Test
@@ -225,6 +242,28 @@ struct GA4Tests {
         let report = AnalyticsConfigurationValidator.validate(configuration)
         #expect(!report.isValid)
         #expect(report.errors.contains { $0.message.contains("conflicting allowed values") })
+    }
+}
+
+private struct StaticAccessTokenProvider: AccessTokenProvider {
+    var token: String
+
+    func accessToken() async throws -> String {
+        token
+    }
+}
+
+private actor RecordingHTTPClient: GA4HTTPClient {
+    private(set) var requests: [GA4HTTPRequest] = []
+    private let response: GA4HTTPResponse
+
+    init(response: GA4HTTPResponse) {
+        self.response = response
+    }
+
+    func send(_ request: GA4HTTPRequest) async throws -> GA4HTTPResponse {
+        requests.append(request)
+        return response
     }
 }
 
