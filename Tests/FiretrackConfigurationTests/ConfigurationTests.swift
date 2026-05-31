@@ -197,6 +197,30 @@ struct ConfigurationTests {
     }
 
     @Test
+    func itemFieldsAreExcludedFromGA4DesiredState() throws {
+        // Item-scoped fields must not become event-scoped GA4 custom definitions.
+        let yaml = """
+        version: 1
+        events:
+          purchase:
+            parameters:
+              currency:
+                type: string
+                ga4_custom_dimension: true
+            items:
+              item_id: { type: string }
+              price: { type: double }
+        """
+        let configuration = try AnalyticsConfigurationLoader.load(yaml: yaml)
+        let desired = GA4DesiredStateExtractor.extract(from: configuration)
+
+        let dimensionNames = desired.customDimensions.map(\.parameterName)
+        #expect(dimensionNames == ["currency"])
+        #expect(!dimensionNames.contains("item_id"))
+        #expect(desired.customMetrics.contains { $0.parameterName == "price" } == false)
+    }
+
+    @Test
     func itemsOnAReservedEcommerceEventWithValidFieldsIsValid() throws {
         let yaml = """
         version: 1

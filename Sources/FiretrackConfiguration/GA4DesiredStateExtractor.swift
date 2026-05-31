@@ -44,6 +44,11 @@ package enum GA4DesiredStateExtractor {
     }
 
     /// Returns merged global and event-local parameter definitions.
+    ///
+    /// Only event `parameters` are considered. Item-scoped fields (`event.items`) are
+    /// deliberately excluded: item custom parameters register as ITEM-scoped GA4 custom
+    /// definitions (a separate quota from event-scoped), which Firetrack does not sync yet —
+    /// item values still reach BigQuery without registration.
     package static func parameterDefinitions(
         _ configuration: AnalyticsTrackingConfiguration,
     ) -> [String: AnalyticsParameterConfiguration] {
