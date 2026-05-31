@@ -48,6 +48,12 @@ Useful event families:
 - `paywall_viewed`, `purchase_started`, `purchase_completed`, `purchase_failed`:
   monetization.
 
+For ECommerce revenue events (`purchase`, `add_to_cart`, `view_item`, …), attach
+an `items` array describing the products — `item_id`, `item_name`, `price`,
+`quantity`, plus a few custom item fields. This is the one structured parameter
+GA4 accepts; keep each item field a flat scalar (no nesting). In Firetrack,
+declare `items` on the reserved event (see the schema reference).
+
 ## Screen and view analytics
 
 Screen views alone are insufficient. To understand view behavior, log entry, meaningful

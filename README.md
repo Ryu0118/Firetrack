@@ -242,6 +242,33 @@ any parameter under an event marked `pii: true`) must not also be registered as
 a GA4 custom dimension or metric, so personally identifiable data never reaches
 GA4 — `validate` fails if it would.
 
+### ECommerce items
+
+A reserved ECommerce event (`purchase`, `add_to_cart`, `view_item`, … — 14 in
+total) can carry an `items` array of flat-scalar fields. This is the one place a
+structured parameter is allowed; Firebase rejects arbitrary nested/array
+parameters everywhere else.
+
+```yaml
+events:
+  purchase:
+    parameters:
+      value:
+        type: double
+        required: true
+    items:
+      item_id: { type: string, required: true }   # reserved field → must be string
+      price: { type: double, required: true }      # reserved field → must be double
+      quantity: { type: int }
+      gift_wrap: { type: bool }                     # custom item parameter
+```
+
+`generate` emits a typed `PurchaseItem` struct and a `case purchase(value: Double,
+items: [PurchaseItem])`; `firebaseParameters` carries the array under the `items`
+key. Item fields are scalars only (no `enum`), reserved names are type-checked,
+and up to 27 custom item parameters are allowed. Item-scoped GA4 custom
+definitions aren't synced — the item values still reach BigQuery.
+
 ---
 
 ## Commands
