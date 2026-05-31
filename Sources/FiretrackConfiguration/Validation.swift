@@ -160,7 +160,7 @@ package enum AnalyticsConfigurationValidator {
         }
         errors += fields.flatMap { itemFieldErrors($0.value, name: $0.key, path: "\(base).\($0.key)") }
 
-        let customCount = fields.lazy.count { ECommerceItemsSpec.reservedFieldTypes[$0.key] == nil }
+        let customCount = fields.count { ECommerceItemsSpec.reservedFieldTypes[$0.key] == nil }
         if customCount > ECommerceItemsSpec.maxCustomItemParameters {
             errors.append(.init(
                 path: base,

@@ -75,6 +75,21 @@ extension SwiftAnalyticsGenerator {
         return collapsed.isEmpty ? nil : collapsed
     }
 
+    /// The Swift type for a parameter/item type, treating `enum` as `String` (named enum value
+    /// types are handled by the caller where applicable).
+    static func baseSwiftType(_ type: AnalyticsParameterType) -> String {
+        switch type {
+        case .string, .enumeration:
+            "String"
+        case .int:
+            "Int"
+        case .double:
+            "Double"
+        case .bool:
+            "Bool"
+        }
+    }
+
     private static func parameterAssignment(_ entry: (key: String, value: AnalyticsParameterConfiguration)) -> String {
         let localName = entry.key.lowerCamelCased()
         let expression = analyticsValueExpression(localName: localName, parameter: entry.value)
@@ -100,18 +115,10 @@ extension SwiftAnalyticsGenerator {
     }
 
     private func swiftType(for parameter: AnalyticsParameterConfiguration, parameterName: String) -> String {
-        switch parameter.type {
-        case .string:
-            "String"
-        case .enumeration:
-            parameter.allowed?.isEmpty == false ? "\(parameterName.upperCamelCased())Value" : "String"
-        case .int:
-            "Int"
-        case .double:
-            "Double"
-        case .bool:
-            "Bool"
+        if parameter.type == .enumeration, parameter.allowed?.isEmpty == false {
+            return "\(parameterName.upperCamelCased())Value"
         }
+        return Self.baseSwiftType(parameter.type)
     }
 
     private static func analyticsValueExpression(

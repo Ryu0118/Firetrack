@@ -22,7 +22,7 @@ rules:
   doc: README.md
   message: "Tracking-plan schema or validation rules changed \u2014 update README
     (The YAML contract) and the firetrack skill schema."
-  checksum: 7d143653b87b30c10123122e61716cddb620eb389da962f42e281253e7821422
+  checksum: 40dff2669558a160673722364b942cd65152b7204233405e68ab1155974dcc12
 - name: readme-codegen
   sources:
   - Sources/FiretrackSwiftGenerator/SwiftAnalyticsGenerator.swift
@@ -36,7 +36,7 @@ rules:
   doc: README.md
   message: "Swift codegen output shape changed \u2014 update README (Quick start generated
     example)."
-  checksum: 0bcb7ce39cf56814c29ea4ebb59a705787fe571a0702b91af284f985080a4183
+  checksum: 22f2e729ad798ba5983845a6782d2840bd59907b88d41da71563e42b0fbc6007
 - name: agents-architecture
   sources:
   - Package.swift

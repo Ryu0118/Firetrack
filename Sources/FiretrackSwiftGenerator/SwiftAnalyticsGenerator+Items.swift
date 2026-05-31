@@ -13,25 +13,12 @@ extension SwiftAnalyticsGenerator {
         }
     }
 
-    static func itemSwiftType(_ field: AnalyticsItemFieldConfiguration) -> String {
-        switch field.type {
-        case .string, .enumeration:
-            "String"
-        case .int:
-            "Int"
-        case .double:
-            "Double"
-        case .bool:
-            "Bool"
-        }
-    }
-
     private func itemStruct(_ event: ResolvedEvent, structName: String, access: String) throws -> StructDeclSyntax {
         try StructDeclSyntax("\(raw: access)struct \(raw: structName): Equatable, Sendable") {
             for (name, field) in event.items {
                 let optional = field.required == true ? "" : "?"
                 try VariableDeclSyntax(
-                    "\(raw: access)var \(raw: name.lowerCamelCased()): \(raw: Self.itemSwiftType(field))\(raw: optional)",
+                    "\(raw: access)var \(raw: name.lowerCamelCased()): \(raw: Self.baseSwiftType(field.type))\(raw: optional)",
                 )
             }
             try VariableDeclSyntax(
