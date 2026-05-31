@@ -11,3 +11,4 @@ DerivedData/
 .nest/
 .serena/
 docs/
+.claude/scheduled_tasks.lock
