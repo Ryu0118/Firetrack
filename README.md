@@ -18,8 +18,10 @@ Firetrack makes your analytics contract _executable_. Analytics rot the moment t
 ## Installation
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Ryu0118/Firetrack/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Ryu0118/Firetrack/main/install.sh | VERSION=0.1.0 bash
 ```
+
+The installer verifies the release archive's SHA-256 checksum before extracting it.
 
 ### Other methods
 
@@ -76,7 +78,6 @@ Then tell your agent:
    platforms: [ios]
    events:
      recording_completed:
-       pii: false
        parameters:
          source:
            type: enum
@@ -222,7 +223,6 @@ global_parameters:
 
 events:
   recording_completed:
-    pii: false
     parameters:
       source:
         type: enum
@@ -234,13 +234,11 @@ events:
         ga4_custom_metric: true
 ```
 
-`validate` enforces snake_case names, GA4-safe prefixes, metric type rules
+`validate` rejects unknown YAML keys and unsupported schema versions, then enforces
+snake_case names, GA4-safe prefixes, metric type rules
 (`int`/`double` only), enum value formatting, and key-event references —
 deterministically, with sorted output. `ga4_custom_metric` units are inferred
-from the name suffix (`_ms`, `_sec`, `_m`). A parameter marked `pii: true` (or
-any parameter under an event marked `pii: true`) must not also be registered as
-a GA4 custom dimension or metric, so personally identifiable data never reaches
-GA4 — `validate` fails if it would.
+from the name suffix (`_ms`, `_sec`, `_m`).
 
 ### ECommerce items
 
@@ -312,30 +310,26 @@ and events as stubs from the key-event list. Review and edit before syncing.
 
 ## Authentication
 
-Only the GA4 commands (`ga4 diff`, `ga4 sync`, `doctor`) need credentials — `validate`
+Only the GA4 commands (`pull`, `ga4 diff`, `ga4 sync`, `doctor`) need credentials — `validate`
 and `generate` are fully offline.
 
 **No tokens or keys go in `firetrack.yml`.** The plan holds only identifiers (GA4
 property ID, service-account email, BigQuery project number). The access token is
-resolved at runtime, in order:
+resolved at runtime from:
 
 1. **`GOOGLE_OAUTH_ACCESS_TOKEN`** environment variable — set this and `gcloud` is not needed
-2. **Impersonated service account** (`ga4_sync.impersonate_service_account`, via IAMCredentials)
-3. **`gcloud auth print-access-token`**
+2. **`gcloud auth print-access-token`**
 
-Firetrack reads exported shell variables, and also auto-loads a **`.env`** file from the
-current directory — exported variables take precedence over `.env`. So either works:
+Export the token in the shell when using an explicit access token:
 
 ```bash
 export GOOGLE_OAUTH_ACCESS_TOKEN="$(gcloud auth print-access-token)"
 firetrack ga4 sync
-
-# or put it in .env (gitignored) at the project root:
-echo 'GOOGLE_OAUTH_ACCESS_TOKEN=ya29....' > .env
-firetrack ga4 sync
 ```
 
-Impersonation requests the `analytics.edit` and `analytics.readonly` scopes.
+When impersonation is configured, Firetrack always exchanges the base credential
+for a short-lived service-account token. Read-only commands request
+`analytics.readonly`; an applying `ga4 sync` requests `analytics.edit`.
 
 ---
 

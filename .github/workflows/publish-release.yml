@@ -12,13 +12,13 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   preflight:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Validate version format
         run: |
@@ -42,7 +42,7 @@ jobs:
     needs: preflight
     runs-on: macos-26
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Select Xcode 26.2
         run: sudo xcode-select --switch /Applications/Xcode_26.2.app/Contents/Developer
@@ -66,7 +66,7 @@ jobs:
           VERSION: ${{ inputs.version }}
 
       - name: Upload release archive
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: firetrack-darwin-universal
           path: |
@@ -75,7 +75,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload binary for artifact bundle
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: binary-macos
           path: .build/apple/Products/Release/firetrack
@@ -84,10 +84,12 @@ jobs:
   commit-version:
     needs: build-macos
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     outputs:
       commit_sha: ${{ steps.push.outputs.sha }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Bump Version.swift
         run: |
@@ -118,18 +120,18 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           ref: ${{ needs.commit-version.outputs.commit_sha }}
 
       - name: Download release archive
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
         with:
           name: firetrack-darwin-universal
           path: /tmp/release-assets
 
       - name: Download binary for artifact bundle
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
         with:
           name: binary-macos
           path: /tmp/binaries/macos

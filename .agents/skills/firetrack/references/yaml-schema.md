@@ -2,6 +2,8 @@
 
 Complete reference for the Firetrack tracking-plan contract (`version: 1`).
 
+Unknown keys, duplicate keys, and schema versions other than `version: 1` are rejected.
+
 ## Contents
 
 - [Top level](#top-level)
@@ -87,7 +89,6 @@ events:
     fire_when: The user stops a recording and it saves.    # optional; documents the trigger
     owner: product                                         # optional; team/domain owner
     retention_anchor: true                                 # optional; activation/retention anchor
-    pii: false                                             # true ⇒ no GA4 custom def
     parameters:
       source:
         type: enum
@@ -152,7 +153,6 @@ yet (item values still reach BigQuery). The 200-items-per-event and
 | `display_name` | free text | GA4 custom dimension/metric display name (falls back to the humanized name) |
 | `ga4_custom_dimension` | `true` | register as GA4 custom dimension |
 | `ga4_custom_metric` | `true` | register as GA4 custom metric — **only `int`/`double`** |
-| `pii` | `true` / `false` | marks personally identifiable data; cannot be a GA4 custom dimension/metric |
 
 GA4 metric measurement unit is inferred from the parameter-name suffix:
 `_ms` → MILLISECONDS, `_sec` → SECONDS, `_m` → METERS, otherwise STANDARD.
@@ -169,9 +169,5 @@ GA4 metric measurement unit is inferred from the parameter-name suffix:
 - `items` is only valid on a reserved ECommerce event; reserved item fields must
   use their canonical type; item fields cannot be `enum`; at most 27 custom item
   parameters.
-- A `pii: true` parameter (or any parameter under an event marked `pii: true`)
-  must not also set `ga4_custom_dimension`/`ga4_custom_metric`. GA4 must never
-  receive personally identifiable information; Google rejects PII in custom
-  definitions. A PII parameter may still be declared and logged locally — it
-  just cannot become GA4 reporting config.
+- Unknown YAML keys and schema versions other than `version: 1` are rejected.
 - `TODO` placeholders in `destinations`/`ga4_sync` must be replaced before sync.

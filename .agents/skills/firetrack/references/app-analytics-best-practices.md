@@ -127,7 +127,7 @@ For MCP-based analysis:
 3. Use BigQuery for raw event SQL, pathing, cohorts, dwell time, and schema validation.
 4. Always state date range, timezone, app version filters, sample size, and query assumptions.
 5. Do not infer event semantics from names alone; use descriptions, fire conditions, enum
-   values, owners, and PII flags.
+   values and owners.
 
 ## Privacy and safety
 
@@ -145,12 +145,6 @@ Prefer coarse, bounded, and product-meaningful values:
 - `distance_bucket`, `duration_bucket`, `permission_status`, `failure_reason`,
   `entry_source`, `result`, `mode`.
 
-In Firetrack, mark any parameter that carries personal data `pii: true` (or mark
-the whole event `pii: true`). `validate` then rejects registering it as a GA4
-custom dimension or metric, so PII never reaches GA4 — Google forbids PII in
-custom definitions. A `pii` parameter can still be declared and logged locally;
-it just cannot become GA4 reporting config.
-
 ## Review checklist
 
 - Every event answers a real question.
@@ -160,6 +154,6 @@ it just cannot become GA4 reporting config.
 - GA4 custom dimensions are low-cardinality.
 - High-cardinality analysis fields are kept for BigQuery, not GA4 UI.
 - Screen behavior includes view entry, important actions, exits, and dwell time.
-- No PII or raw sensitive context is logged.
+- No raw sensitive context is logged.
 - DebugView confirms expected events, names, parameters, and types.
 - The generated app code, GA4 definitions, and analysis assumptions all match the plan.

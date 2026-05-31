@@ -32,10 +32,10 @@ Three supported methods — pick what matches the user's toolchain.
 
 **Install script** (no toolchain required):
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Ryu0118/Firetrack/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Ryu0118/Firetrack/main/install.sh | VERSION=0.1.0 bash
 ```
 Installs to `~/.local/bin` (override with `INSTALL_DIR=...`). Re-runs are idempotent;
-force a reinstall with `FORCE=1`. Pin a version with `VERSION=0.1.0`.
+force a reinstall with `FORCE=1`. The installer verifies the release archive checksum.
 
 **mise** (`jdx/mise`):
 ```bash
@@ -74,7 +74,6 @@ version: 1
 platforms: [ios]
 events:
   recording_completed:
-    pii: false
     parameters:
       source:
         type: enum
@@ -123,9 +122,10 @@ firetrack doctor --config firetrack.yml --check-remote  # also list remote drift
 `doctor --check-remote` lists custom dimensions/metrics that exist in GA4 but are
 absent from the plan. It only reports — Firetrack never deletes remote resources.
 
-Auth resolves in order: `GOOGLE_OAUTH_ACCESS_TOKEN` → `ga4_sync.impersonate_service_account`
-(IAMCredentials) → `gcloud auth print-access-token`. Required scopes:
-`analytics.edit`, `analytics.readonly`.
+Auth resolves from `GOOGLE_OAUTH_ACCESS_TOKEN`, then `gcloud auth print-access-token`.
+When `ga4_sync.impersonate_service_account` is configured, the resolved base credential
+is always exchanged through IAMCredentials. Read-only commands request
+`analytics.readonly`; applying sync requests `analytics.edit`.
 
 ### 5. Wire into CI
 

@@ -58,7 +58,7 @@ The toolchain is pinned via `nestfile.yaml` and resolved into `.nest/bin/` by
 - Output must be deterministic (byte-stable for identical input).
 - GA4 sync **creates missing resources only** — never delete, archive, or rename remote GA4 resources.
 - Generated Swift must parse (SwiftParser) before it is written.
-- Auth resolves in order: `GOOGLE_OAUTH_ACCESS_TOKEN` → impersonated service account → `gcloud`.
+- Auth resolves from `GOOGLE_OAUTH_ACCESS_TOKEN`, then `gcloud`; configured impersonation always exchanges that base credential through IAMCredentials.
 
 ## Hooks & Gates
 

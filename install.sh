@@ -85,9 +85,10 @@ run_cmd() {
 
 main() {
   command -v curl >/dev/null 2>&1 || error "curl is required but not found"
+  command -v shasum >/dev/null 2>&1 || error "shasum is required but not found"
   command -v tar >/dev/null 2>&1 || error "tar is required but not found"
 
-  local platform version archive_url download_dir
+  local platform version archive_url checksum_url download_dir archive_name checksum_name
 
   platform="$(detect_platform)"
 
@@ -100,6 +101,7 @@ main() {
   if [ -z "$version" ]; then
     error "failed to determine version to install"
   fi
+  echo "$version" | grep -qE '^v?[0-9]+\.[0-9]+\.[0-9]+$' || error "invalid version: $version"
 
   local clean_version
   clean_version="$(echo "$version" | sed 's/^v//')"
@@ -112,7 +114,10 @@ main() {
     exit 0
   fi
 
-  archive_url="https://github.com/${REPO}/releases/download/${version}/${BIN_NAME}-${version}-${platform}.tar.gz"
+  archive_name="${BIN_NAME}-${version}-${platform}.tar.gz"
+  checksum_name="${archive_name}.sha256"
+  archive_url="https://github.com/${REPO}/releases/download/${version}/${archive_name}"
+  checksum_url="${archive_url}.sha256"
 
   if [ -n "$current" ]; then
     info "Updating $BIN_NAME $current -> $clean_version ($platform)..."
@@ -121,14 +126,20 @@ main() {
   fi
 
   download_dir="$(mktemp -d)"
+  trap 'rm -rf "$download_dir"' EXIT
 
-  if ! curl -fsSL "$archive_url" | tar xz -C "$download_dir"; then
-    rm -rf "$download_dir"
-    error "failed to download or extract $BIN_NAME $version"
-  fi
+  curl -fsSL "$archive_url" -o "$download_dir/$archive_name" \
+    || error "failed to download $BIN_NAME $version"
+  curl -fsSL "$checksum_url" -o "$download_dir/$checksum_name" \
+    || error "failed to download checksum for $BIN_NAME $version"
+  (
+    cd "$download_dir"
+    shasum -a 256 -c "$checksum_name"
+  ) || error "checksum verification failed for $BIN_NAME $version"
+  tar xzf "$download_dir/$archive_name" -C "$download_dir" \
+    || error "failed to extract $BIN_NAME $version"
 
   if [ ! -f "$download_dir/$BIN_NAME" ]; then
-    rm -rf "$download_dir"
     error "binary not found in archive"
   fi
 
@@ -136,6 +147,7 @@ main() {
   run_cmd mkdir -p "$INSTALL_DIR"
   run_cmd mv -f "$download_dir/$BIN_NAME" "$INSTALL_DIR/$BIN_NAME"
   rm -rf "$download_dir"
+  trap - EXIT
 
   if [ ! -x "$INSTALL_DIR/$BIN_NAME" ]; then
     error "installation failed: $INSTALL_DIR/$BIN_NAME not found"
