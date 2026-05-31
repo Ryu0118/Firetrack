@@ -30,7 +30,7 @@ rules:
   doc: README.md
   message: "Swift codegen output shape changed \u2014 update README (Quick start generated
     example)."
-  checksum: 570eae512d1c948c65e06d6a42350137632dcc22d7dba714c6c52ae78152082a
+  checksum: 0122ddb4df481d791b838d839be180c391a7131482a3306930334ab558f24830
 - name: agents-architecture
   sources:
   - Package.swift

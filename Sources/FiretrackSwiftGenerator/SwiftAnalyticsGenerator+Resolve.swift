@@ -10,6 +10,15 @@ struct ResolvedEvent {
     var caseName: String
     var documentation: String?
     var parameters: [(key: String, value: AnalyticsParameterConfiguration)]
+    /// Generated item struct name (e.g. `PurchaseItem`), or nil when the event has no items.
+    var itemStructName: String?
+    /// Item fields in deterministic key order; empty when the event has no items.
+    var items: [(key: String, value: AnalyticsItemFieldConfiguration)]
+
+    /// Whether the event carries an ECommerce items array.
+    var hasItems: Bool {
+        itemStructName != nil
+    }
 }
 
 extension SwiftAnalyticsGenerator {
@@ -22,20 +31,27 @@ extension SwiftAnalyticsGenerator {
                     caseName: eventName.lowerCamelCased(),
                     documentation: event.description,
                     parameters: effectiveParameters(for: event, configuration: context.configuration),
+                    itemStructName: event.items == nil ? nil : "\(eventName.upperCamelCased())Item",
+                    items: (event.items ?? [:]).sorted { $0.key < $1.key },
                 )
             }
     }
 
-    /// The `case let .x(bindings): ...; return parameters` body for one event.
+    /// The `case let .x(bindings): ...; return parameters` body for one event. Items, when
+    /// present, are not part of the typed dictionary, so they are bound with `_`.
     static func parameterCase(_ event: ResolvedEvent) -> SwitchCaseSyntax {
         guard !event.parameters.isEmpty else {
+            // A `case .name:` pattern ignores any associated values (including items).
             return SwitchCaseSyntax("case .\(raw: event.caseName):\nreturn [:]")
         }
-        let bindings = event.parameters.map { $0.key.lowerCamelCased() }.joined(separator: ", ")
+        var bindingParts = event.parameters.map { $0.key.lowerCamelCased() }
+        if event.hasItems {
+            bindingParts.append("_")
+        }
         let assignments = event.parameters.map(parameterAssignment).joined(separator: "\n")
         return SwitchCaseSyntax(
             """
-            case let .\(raw: event.caseName)(\(raw: bindings)):
+            case let .\(raw: event.caseName)(\(raw: bindingParts.joined(separator: ", "))):
             var parameters: [String: AnalyticsValue] = [:]
             \(raw: assignments)
             return parameters

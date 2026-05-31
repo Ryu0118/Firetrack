@@ -25,6 +25,7 @@ package struct SwiftAnalyticsGenerator {
             declarations.append(screens)
         }
         try declarations.append(contentsOf: allowedValueEnums(context))
+        try declarations.append(contentsOf: itemStructs(context))
         try declarations.append(analyticsEventEnum(context))
         try declarations.append(analyticsEventBridge(context))
         return Self.render(declarations)
