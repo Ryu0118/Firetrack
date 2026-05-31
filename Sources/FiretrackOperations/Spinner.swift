@@ -7,34 +7,71 @@ import Foundation
 /// each call awaits its work or returns immediately and emits nothing, keeping
 /// output deterministic. Animations are intentionally brief (~0.4s).
 enum Spinner {
-    private static let frames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
     private static let clearLine = "\r\u{1B}[K"
+    private static let reset = "\u{1B}[0m"
 
-    /// Runs `work`, animating a flowing-color spinner labeled `label` while it is in flight.
+    /// Flickering flame frames (6 rows each) cycled while work is in flight.
+    private static let flame: [[String]] = [
+        ["    ▄    ", "   ▟█▖   ", "  ▟██▙   ", " ▗████▖  ", " ▟█████▖ ", "▟███████▖"],
+        ["    ▖    ", "   ▗█▖   ", "   ▟█▙   ", "  ▟███▖  ", " ▗█████▖ ", "▟███████▖"],
+        ["    ▗    ", "   ▗█▄   ", "  ▗██▙   ", "  ▟███▙  ", " ▟█████▙ ", "▟███████▖"],
+        ["   ▖     ", "   ▟▙    ", "  ▟██▖   ", " ▗███▙▖  ", " ▟█████▖ ", "▟███████▖"],
+    ]
+    private static let flameRows = 6
+    /// Bottom-to-top heat: deep red → orange → yellow.
+    private static let heat: [(Int, Int, Int)] = [
+        (255, 70, 0), (255, 70, 0), (255, 120, 0), (255, 170, 0), (255, 215, 40), (255, 245, 120),
+    ]
+
+    /// Runs `work` behind a flickering flame that burns while it is in flight, labeled to
+    /// the right. The flame is cleared when `work` finishes.
     static func run<T>(_ label: String, work: () async throws -> T) async rethrows -> T {
         let style = Style.terminal
         guard style.isEnabled else { return try await work() }
 
         let animation = Task { @Sendable in
             var step = 0
+            var firstDraw = true
             while !Task.isCancelled {
-                let frame = style.gradient(frames[step % frames.count], phase: step * 30)
-                emit("\r\(frame) \(style.paint(label, .dim))…\u{1B}[K")
+                drawFlame(step: step, label: label, firstDraw: firstDraw)
+                firstDraw = false
                 step += 1
-                try? await Task.sleep(for: .milliseconds(80))
+                try? await Task.sleep(for: .milliseconds(110))
             }
         }
 
         do {
             let result = try await work()
             animation.cancel()
-            emit(clearLine)
+            clearFlame()
             return result
         } catch {
             animation.cancel()
-            emit(clearLine)
+            clearFlame()
             throw error
         }
+    }
+
+    private static func drawFlame(step: Int, label: String, firstDraw: Bool) {
+        let rows = flame[step % flame.count]
+        let labelRow = flameRows / 2
+        var out = ""
+        if !firstDraw { out += "\u{1B}[\(flameRows)A" }
+        for (index, row) in rows.enumerated() {
+            let (red, green, blue) = heat[index % heat.count]
+            let tinted = "\u{1B}[1;38;2;\(red);\(green);\(blue)m\(row)\(reset)"
+            let suffix = index == labelRow ? "  \u{1B}[1m\(label)\(reset)…" : ""
+            out += "\r\(tinted)\(suffix)\u{1B}[K\n"
+        }
+        emit(out)
+    }
+
+    private static func clearFlame() {
+        emit("\u{1B}[\(flameRows)A")
+        for _ in 0 ..< flameRows {
+            emit("\r\u{1B}[K\n")
+        }
+        emit("\u{1B}[\(flameRows)A")
     }
 
     /// Plays a brief rainbow intro banner that scrolls its gradient, then settles.
