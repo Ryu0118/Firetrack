@@ -149,10 +149,14 @@ package enum GA4SyncPlanner {
 /// Errors that can occur while diffing or calling GA4 APIs.
 package enum GA4SyncError: Error, Equatable, CustomStringConvertible {
     case missingPropertyID
+    case invalidPropertyID(String)
+    case invalidBigQueryProject(String)
     case conflictingBigQueryLink(existing: [String], desired: String)
     case requestFailed(method: String, url: String, statusCode: Int, body: String)
     case invalidJSON(method: String, url: String, message: String)
     case invalidURL(String)
+    case invalidRequestDestination(String)
+    case invalidServiceAccount(String)
     case unsupportedHTTPMethod(String)
     case tokenUnavailable(String)
 
@@ -161,6 +165,10 @@ package enum GA4SyncError: Error, Equatable, CustomStringConvertible {
         switch self {
         case .missingPropertyID:
             "GA4 property ID is required. Set destinations.ga4.property_id or GA4_PROPERTY_ID."
+        case let .invalidPropertyID(value):
+            "invalid GA4 property ID: \(value)"
+        case let .invalidBigQueryProject(value):
+            "invalid BigQuery project reference: \(value)"
         case let .conflictingBigQueryLink(existing, desired):
             "GA4 property already has BigQuery link(s): \(existing.joined(separator: ", ")). Desired link is \(desired); refusing to create a conflicting link."
         case let .requestFailed(method, url, statusCode, body):
@@ -169,6 +177,10 @@ package enum GA4SyncError: Error, Equatable, CustomStringConvertible {
             "GA Admin API returned invalid JSON for \(method) \(url): \(message)"
         case let .invalidURL(value):
             "invalid URL: \(value)"
+        case let .invalidRequestDestination(value):
+            "refusing to send OAuth token to untrusted destination: \(value)"
+        case let .invalidServiceAccount(value):
+            "invalid service account email: \(value)"
         case let .unsupportedHTTPMethod(method):
             "unsupported HTTP method: \(method)"
         case let .tokenUnavailable(message):

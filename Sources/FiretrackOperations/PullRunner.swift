@@ -23,7 +23,13 @@ package struct PullRunner {
         ) else {
             throw GA4SyncError.missingPropertyID
         }
-        let tokenProvider = GA4ContextFactory.tokenProvider(serviceAccount: request.impersonateServiceAccount)
+        guard GA4IdentifierValidator.isNumeric(propertyID) else {
+            throw GA4SyncError.invalidPropertyID(propertyID)
+        }
+        let tokenProvider = GA4ContextFactory.tokenProvider(
+            serviceAccount: request.impersonateServiceAccount,
+            scope: .readonly,
+        )
         let token = try await tokenProvider.accessToken()
         let remote = try await client.remoteState(propertyID: propertyID, token: token, includeBigQuery: true)
         let configuration = GA4RemoteStateReverser.configuration(from: remote, propertyID: propertyID)

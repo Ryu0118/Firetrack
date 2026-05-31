@@ -78,14 +78,18 @@ package struct DoctorRunner {
     /// Reports which authentication source can produce a GA4 token, using the same
     /// resolution order as `ga4 diff` / `ga4 sync` (env → impersonation → gcloud).
     private func reportAuth(serviceAccount: String?) async {
-        let environment = DotEnv.mergedEnvironment()
-        if await (try? EnvironmentAccessTokenProvider(environment: environment).accessToken()) != nil {
+        let environment = ProcessInfo.processInfo.environment
+        if serviceAccount == nil,
+           await (try? EnvironmentAccessTokenProvider(environment: environment).accessToken()) != nil
+        {
             logger.info("Auth: GOOGLE_OAUTH_ACCESS_TOKEN ✓")
             return
         }
-        let fallback: any AccessTokenProvider = serviceAccount.map {
-            ImpersonatedAccessTokenProvider(serviceAccount: $0)
-        } ?? GcloudAccessTokenProvider()
+        let fallback = GA4ContextFactory.tokenProvider(
+            serviceAccount: serviceAccount,
+            scope: .readonly,
+            environment: environment,
+        )
         let label = serviceAccount != nil ? "impersonated service account" : "gcloud"
         do {
             _ = try await fallback.accessToken()
@@ -106,7 +110,10 @@ package struct DoctorRunner {
             logger.info("Remote drift: skipped (no GA4 property ID)")
             return
         }
-        let token = try await GA4ContextFactory.tokenProvider(serviceAccount: serviceAccount).accessToken()
+        let token = try await GA4ContextFactory.tokenProvider(
+            serviceAccount: serviceAccount,
+            scope: .readonly,
+        ).accessToken()
         let remote = try await client.remoteState(propertyID: propertyID, token: token, includeBigQuery: false)
         let desired = GA4DesiredStateExtractor.extract(from: configuration)
         let orphans = Self.orphanParameterNames(desired: desired, remote: remote)

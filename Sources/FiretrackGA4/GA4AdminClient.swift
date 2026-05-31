@@ -185,7 +185,7 @@ package struct GA4AdminClient {
                 method: method.rawValue,
                 url: url.absoluteString,
                 statusCode: response.statusCode,
-                body: String(data: response.body, encoding: .utf8) ?? "",
+                body: DiagnosticSanitizer.sanitize(response.body),
             )
         }
         return response.body.isEmpty ? Data("{}".utf8) : response.body
