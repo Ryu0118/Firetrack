@@ -126,11 +126,19 @@ struct Style {
     func banner(_ title: String, phase: Int = 0) -> [String]? {
         guard isEnabled else { return nil }
         let label = "\(Glyph.fire.rawValue) \(title)"
-        let inner = label.count + 5
+        // 🔥 renders as two terminal cells but counts as one Character, so the true
+        // display width is `count + 1`. Pad symmetrically and size the rules to match.
+        let padding = 2
+        let inner = label.count + 1 + padding * 2
+        let spaces = String(repeating: " ", count: padding)
         let top = "╭" + String(repeating: "─", count: inner) + "╮"
-        let mid = "│  " + gradient(label, phase: phase) + "   │"
+        let mid = "│" + spaces + label + spaces + "│"
         let bottom = "╰" + String(repeating: "─", count: inner) + "╯"
-        return [gradient(top, phase: phase), paint(mid, .bold), gradient(bottom, phase: phase + 60)]
+        return [
+            gradient(top, phase: phase),
+            gradient(mid, phase: phase),
+            gradient(bottom, phase: phase + 60),
+        ]
     }
 
     private static func hueToRGB(_ hue: Double) -> (Int, Int, Int) {
