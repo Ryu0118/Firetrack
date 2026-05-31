@@ -43,19 +43,6 @@ extension SwiftAnalyticsGenerator {
         )
     }
 
-    private static func parameterAssignment(_ entry: (key: String, value: AnalyticsParameterConfiguration)) -> String {
-        let localName = entry.key.lowerCamelCased()
-        let expression = analyticsValueExpression(localName: localName, parameter: entry.value)
-        guard entry.value.required == true else {
-            return """
-            if let \(localName) {
-            parameters["\(entry.key)"] = \(expression)
-            }
-            """
-        }
-        return "parameters[\"\(entry.key)\"] = \(expression)"
-    }
-
     func associatedValues(for parameters: [(key: String, value: AnalyticsParameterConfiguration)]) -> String {
         parameters.map { name, parameter in
             let type = swiftType(for: parameter, parameterName: name)
@@ -71,6 +58,19 @@ extension SwiftAnalyticsGenerator {
             .joined(separator: " ")
             .trimmingCharacters(in: .whitespaces)
         return collapsed.isEmpty ? nil : collapsed
+    }
+
+    private static func parameterAssignment(_ entry: (key: String, value: AnalyticsParameterConfiguration)) -> String {
+        let localName = entry.key.lowerCamelCased()
+        let expression = analyticsValueExpression(localName: localName, parameter: entry.value)
+        guard entry.value.required == true else {
+            return """
+            if let \(localName) {
+            parameters["\(entry.key)"] = \(expression)
+            }
+            """
+        }
+        return "parameters[\"\(entry.key)\"] = \(expression)"
     }
 
     private func effectiveParameters(
