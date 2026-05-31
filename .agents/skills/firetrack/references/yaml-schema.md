@@ -110,6 +110,37 @@ are not enforced by `validate` — they document intent and feed reporting:
 `description` becomes a doc comment on the generated Swift case, and `doctor`
 surfaces missing `owner`/`fire_when` coverage and lists retention anchors.
 
+## items (ECommerce)
+
+Only the 14 reserved ECommerce events accept an `items` map (`view_item`,
+`add_to_cart`, `view_cart`, `begin_checkout`, `purchase`, `refund`,
+`view_promotion`, … — see Firebase's measure-ecommerce list). Declaring `items`
+on any other event is a validation error. Each item field is a **flat scalar**
+(`enum` is not allowed); reserved field names (`item_id`, `item_name`, `price`,
+`quantity`, `item_category`, …) must use their canonical type, and any other
+field is a custom item parameter (snake_case, no reserved prefix, max 27).
+
+```yaml
+events:
+  purchase:
+    parameters:
+      value:
+        type: double
+        required: true
+    items:
+      item_id: { type: string, required: true }   # reserved → must be string
+      price: { type: double, required: true }      # reserved → must be double
+      quantity: { type: int }
+      gift_wrap: { type: bool }                     # custom item param
+```
+
+`generate` emits a typed `{Event}Item` struct and an `items: [{Event}Item]`
+associated value on the case; items are bridged under the `"items"` key in
+`firebaseParameters`. Item fields take **no** `ga4_custom_dimension`/
+`ga4_custom_metric` flags — item-scoped GA4 custom definitions are not synced
+yet (item values still reach BigQuery). The 200-items-per-event and
+100-character-value caps are runtime limits, not validated here.
+
 ## Parameter types
 
 | Field | Values | Notes |
@@ -135,6 +166,9 @@ GA4 metric measurement unit is inferred from the parameter-name suffix:
 - `ga4_custom_metric` is only valid on `int`/`double` parameters.
 - `enum` values in `allowed` must be `snake_case`.
 - Every `ga4_sync.key_events` entry must reference a defined event.
+- `items` is only valid on a reserved ECommerce event; reserved item fields must
+  use their canonical type; item fields cannot be `enum`; at most 27 custom item
+  parameters.
 - A `pii: true` parameter (or any parameter under an event marked `pii: true`)
   must not also set `ga4_custom_dimension`/`ga4_custom_metric`. GA4 must never
   receive personally identifiable information; Google rejects PII in custom

@@ -188,6 +188,18 @@ For product analytics, make sure the plan can answer:
 - quantitative metrics such as `distance_m`, `duration_sec`, `session_count`,
   and `visible_chart_count`
 
+### ECommerce items
+
+For the 14 reserved ECommerce events (`view_item`, `add_to_cart`, `purchase`,
+`refund`, …), declare an `items` map on the event for item-scoped fields. This is
+the only place a structured (array-of-object) parameter is allowed — Firebase
+rejects arbitrary nested/array parameters everywhere else. Item fields are flat
+scalars (no `enum`); reserved fields (`item_id`, `price`, `quantity`, …) are
+type-checked and up to 27 custom item params are allowed. `generate` produces a
+typed `{Event}Item` struct and bridges the array under `"items"`. Item-scoped GA4
+custom definitions are not synced (item values reach BigQuery regardless). See
+[references/yaml-schema.md](references/yaml-schema.md) for the full shape.
+
 ### What Firetrack registers in GA4
 
 - event-scoped custom dimensions from `ga4_custom_dimension: true`
