@@ -32,7 +32,7 @@ Three supported methods — pick what matches the user's toolchain.
 
 **Install script** (no toolchain required):
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Ryu0118/Firetrack/main/install.sh | VERSION=0.1.0 bash
+curl -fsSL https://raw.githubusercontent.com/Ryu0118/Firetrack/main/install.sh | bash
 ```
 Installs to `~/.local/bin` (override with `INSTALL_DIR=...`). Re-runs are idempotent;
 force a reinstall with `FORCE=1`. The installer verifies the release archive checksum.

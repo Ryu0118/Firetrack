@@ -18,7 +18,7 @@ Firetrack makes your analytics contract _executable_. Analytics rot the moment t
 ## Installation
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Ryu0118/Firetrack/main/install.sh | VERSION=0.1.0 bash
+curl -fsSL https://raw.githubusercontent.com/Ryu0118/Firetrack/main/install.sh | bash
 ```
 
 The installer verifies the release archive's SHA-256 checksum before extracting it.
