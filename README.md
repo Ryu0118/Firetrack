@@ -170,6 +170,21 @@ Analytics.logEvent(event.name, parameters: event.firebaseParameters)
 Every call site is now type-checked end to end: a wrong parameter name or type is a
 compile error, and the event/param strings sent to Firebase always match the plan.
 
+> **Tip:** wrap the call once so you log a single value instead of repeating
+> `name`/`firebaseParameters` everywhere — and so swapping Firebase out (tests, a
+> second destination) is a one-line change:
+>
+> ```swift
+> func log(_ event: AnalyticsEvent) {
+>     Analytics.logEvent(event.name, parameters: event.firebaseParameters)
+> }
+>
+> log(.recordingCompleted(source: .app, distanceM: 1200))
+> ```
+>
+> Put it wherever your analytics layer lives — a free function, a `Logger` type, or
+> behind a protocol you can mock in tests. Firetrack stays out of that choice.
+
 ---
 
 ## The YAML contract

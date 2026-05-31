@@ -22,7 +22,7 @@ rules:
   doc: README.md
   message: "Tracking-plan schema or validation rules changed \u2014 update README
     (The YAML contract) and the firetrack skill schema."
-  checksum: 204ba3ce3b10e40afdbdb2377ef89e707a4add5c05048227e15ad86caa348a6a
+  checksum: 58152c58ffae36ecc1f9b42880d290d9502dc93d2ca9f4df6b5766e6c6123449
 - name: readme-codegen
   sources:
   - Sources/FiretrackSwiftGenerator/SwiftAnalyticsGenerator.swift

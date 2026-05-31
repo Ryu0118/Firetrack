@@ -14,6 +14,9 @@ package struct AnalyticsEventConfiguration: Codable, Equatable {
     package var pii: Bool?
     /// Event parameter definitions keyed by parameter name.
     package var parameters: [String: AnalyticsParameterConfiguration]
+    /// Item-scoped fields for ECommerce events that carry an `items` array. Valid only on
+    /// the reserved ECommerce events; see `ECommerceItemsSpec`.
+    package var items: [String: AnalyticsItemFieldConfiguration]?
 
     enum CodingKeys: String, CodingKey {
         case description
@@ -22,6 +25,7 @@ package struct AnalyticsEventConfiguration: Codable, Equatable {
         case retentionAnchor = "retention_anchor"
         case pii
         case parameters
+        case items
     }
 
     /// Creates an event configuration.
@@ -32,6 +36,7 @@ package struct AnalyticsEventConfiguration: Codable, Equatable {
         retentionAnchor: Bool? = nil,
         pii: Bool? = nil,
         parameters: [String: AnalyticsParameterConfiguration] = [:],
+        items: [String: AnalyticsItemFieldConfiguration]? = nil,
     ) {
         self.description = description
         self.fireWhen = fireWhen
@@ -39,6 +44,7 @@ package struct AnalyticsEventConfiguration: Codable, Equatable {
         self.retentionAnchor = retentionAnchor
         self.pii = pii
         self.parameters = parameters
+        self.items = items
     }
 
     /// Decodes an event while defaulting missing parameters to an empty dictionary.
@@ -53,5 +59,6 @@ package struct AnalyticsEventConfiguration: Codable, Equatable {
             [String: AnalyticsParameterConfiguration].self,
             forKey: .parameters,
         ) ?? [:]
+        items = try container.decodeIfPresent([String: AnalyticsItemFieldConfiguration].self, forKey: .items)
     }
 }
