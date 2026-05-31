@@ -85,4 +85,17 @@ extension Logger {
     func status(_ label: String, _ value: String, isOK: Bool) {
         info("\(label): \(style.paint(value, isOK ? .green : .red))")
     }
+
+    /// Emits a slot-style check result: ✅/❌ with a colored value when interactive.
+    ///
+    /// Plain `"{label}: {value}"` when not interactive, so piped output stays stable.
+    func check(_ label: String, _ value: String, isOK: Bool) {
+        guard style.isEnabled else {
+            info("\(label): \(value)")
+            return
+        }
+        let mark = isOK ? style.icon(.check) : "❌ "
+        let valueColor: Style.Attribute = isOK ? .green : .red
+        info("\(mark)\(style.paint(label, .bold)): \(style.paint(value, valueColor))")
+    }
 }

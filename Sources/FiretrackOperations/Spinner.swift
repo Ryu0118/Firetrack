@@ -70,6 +70,36 @@ enum Spinner {
         emit(clearLine)
     }
 
+    /// Spins a slot reel of symbols on the current line, then clears it ("kachunk").
+    ///
+    /// TTY-only; a no-op otherwise. The caller prints the settled check line after.
+    static func reel(_ label: String) {
+        let style = Style.terminal
+        guard style.isEnabled else { return }
+        let symbols = ["🍒", "🔔", "⭐", "7️⃣", "🍋", "🔥", "💎"]
+        for step in 0 ..< 9 {
+            let symbol = symbols[(step * 3) % symbols.count]
+            emit("\r\(symbol) \(style.paint(label, .dim))…\u{1B}[K")
+            sleep(milliseconds: 34)
+        }
+        emit(clearLine)
+    }
+
+    /// Plays a jackpot flash — rainbow + blink 🎰 — then clears the line.
+    ///
+    /// TTY-only; a no-op otherwise. The caller prints the final settled line after.
+    static func jackpot(_ text: String) {
+        let style = Style.terminal
+        guard style.isEnabled else { return }
+        for frame in 0 ..< 12 {
+            let blink = frame.isMultiple(of: 2) ? "\u{1B}[5m" : ""
+            let body = style.gradient("🎰 \(text) 🎰", phase: frame * 36)
+            emit("\r\(blink)\(body)\u{1B}[K")
+            sleep(milliseconds: 46)
+        }
+        emit(clearLine)
+    }
+
     private static func sleep(milliseconds: Int) {
         Thread.sleep(forTimeInterval: Double(milliseconds) / 1000.0)
     }

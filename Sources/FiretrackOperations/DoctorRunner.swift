@@ -15,27 +15,43 @@ package struct DoctorRunner {
     /// GA4 custom definitions that exist remotely but are missing from the plan (read-only).
     package func run(_ request: GA4Request, checkRemote: Bool = false) async throws {
         Spinner.intro("firetrack doctor")
+        var passed = true
         let configuration = try AnalyticsConfigurationLoader.load(path: request.planPath)
         let report = AnalyticsConfigurationValidator.validate(configuration)
-        logger.status("YAML validation", report.isValid ? "ok" : "failed", isOK: report.isValid)
+        logger.rule()
+        Spinner.reel("YAML validation")
+        logger.check("YAML validation", report.isValid ? "ok" : "failed", isOK: report.isValid)
+        passed = passed && report.isValid
         for error in report.errors {
             logger.note("  - \(error)")
         }
         reportMetadataCoverage(configuration)
         let propertyID = GA4DesiredStateExtractor.propertyID(from: configuration, override: request.propertyID)
-        logger.status("GA4 property ID", propertyID ?? "missing", isOK: propertyID != nil)
+        Spinner.reel("GA4 property ID")
+        logger.check("GA4 property ID", propertyID ?? "missing", isOK: propertyID != nil)
+        passed = passed && (propertyID != nil)
         let serviceAccount = GA4DesiredStateExtractor.impersonatedServiceAccount(
             from: configuration,
             override: request.impersonateServiceAccount,
         )
-        logger.info("Impersonation service account: \(serviceAccount ?? "not configured")")
-        await reportAuth(serviceAccount: serviceAccount)
+        logger.status("Impersonation service account", serviceAccount ?? "not configured", isOK: serviceAccount != nil)
+        let authOK = await reportAuth(serviceAccount: serviceAccount)
+        passed = passed && authOK
         if checkRemote {
-            try await reportRemoteDrift(
+            let driftOK = try await reportRemoteDrift(
                 configuration: configuration,
                 propertyID: propertyID,
                 serviceAccount: serviceAccount,
             )
+            passed = passed && driftOK
+        }
+        logger.rule()
+        if passed {
+            Spinner.jackpot("ALL CHECKS PASSED")
+            logger.success("All checks passed 🎉")
+        } else {
+            logger.info("")
+            logger.hint("Some checks need attention — see above.")
         }
     }
 
@@ -78,13 +94,14 @@ package struct DoctorRunner {
 
     /// Reports which authentication source can produce a GA4 token, using the same
     /// resolution order as `ga4 diff` / `ga4 sync` (env → impersonation → gcloud).
-    private func reportAuth(serviceAccount: String?) async {
+    private func reportAuth(serviceAccount: String?) async -> Bool {
         let environment = ProcessInfo.processInfo.environment
+        Spinner.reel("Auth")
         if serviceAccount == nil,
            await (try? EnvironmentAccessTokenProvider(environment: environment).accessToken()) != nil
         {
-            logger.status("Auth", "GOOGLE_OAUTH_ACCESS_TOKEN ✓", isOK: true)
-            return
+            logger.check("Auth", "GOOGLE_OAUTH_ACCESS_TOKEN ✓", isOK: true)
+            return true
         }
         let fallback = GA4ContextFactory.tokenProvider(
             serviceAccount: serviceAccount,
@@ -94,9 +111,11 @@ package struct DoctorRunner {
         let label = serviceAccount != nil ? "impersonated service account" : "gcloud"
         do {
             _ = try await fallback.accessToken()
-            logger.status("Auth", "\(label) ✓", isOK: true)
+            logger.check("Auth", "\(label) ✓", isOK: true)
+            return true
         } catch {
             logger.failure("Auth: none available\n\(error)")
+            return false
         }
     }
 
@@ -106,28 +125,31 @@ package struct DoctorRunner {
         configuration: AnalyticsTrackingConfiguration,
         propertyID: String?,
         serviceAccount: String?,
-    ) async throws {
+    ) async throws -> Bool {
         guard let propertyID else {
             logger.note("Remote drift: skipped (no GA4 property ID)")
-            return
+            return true
         }
-        let token = try await GA4ContextFactory.tokenProvider(
-            serviceAccount: serviceAccount,
-            scope: .readonly,
-        ).accessToken()
-        let remote = try await client.remoteState(propertyID: propertyID, token: token, includeBigQuery: false)
+        let remote = try await Spinner.run("Checking remote drift") {
+            let token = try await GA4ContextFactory.tokenProvider(
+                serviceAccount: serviceAccount,
+                scope: .readonly,
+            ).accessToken()
+            return try await client.remoteState(propertyID: propertyID, token: token, includeBigQuery: false)
+        }
         let desired = GA4DesiredStateExtractor.extract(from: configuration)
         let orphans = Self.orphanParameterNames(desired: desired, remote: remote)
         if orphans.dimensions.isEmpty, orphans.metrics.isEmpty {
-            logger.status("Remote drift", "none (every remote custom definition is in the plan)", isOK: true)
-            return
+            logger.check("Remote drift", "none (every remote custom definition is in the plan)", isOK: true)
+            return true
         }
-        logger.info("Remote drift (in GA4, not in the plan — Firetrack will not delete these):")
+        logger.note("Remote drift (in GA4, not in the plan — Firetrack will not delete these):")
         for name in orphans.dimensions {
             logger.note("  - custom dimension: \(name)")
         }
         for name in orphans.metrics {
             logger.note("  - custom metric: \(name)")
         }
+        return true
     }
 }
