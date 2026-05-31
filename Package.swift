@@ -55,6 +55,8 @@ let package = Package(
             name: "FiretrackSwiftGenerator",
             dependencies: [
                 "FiretrackConfiguration",
+                .product(name: "SwiftSyntax", package: "swift-syntax"),
+                .product(name: "SwiftSyntaxBuilder", package: "swift-syntax"),
                 .product(name: "SwiftParser", package: "swift-syntax"),
             ],
         ),
@@ -77,6 +79,9 @@ let package = Package(
                 "FiretrackSwiftGenerator",
                 "FiretrackConfiguration",
                 .product(name: "SwiftParser", package: "swift-syntax"),
+            ],
+            resources: [
+                .process("Resources/golden_contract.txt"),
             ],
         ),
         .testTarget(
