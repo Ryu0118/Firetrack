@@ -8,8 +8,11 @@ package struct ValidateRunner {
 
     /// Loads and validates the requested tracking plan.
     package func run(_ request: ValidateRequest) throws {
+        Spinner.intro("firetrack validate")
         let configuration = try AnalyticsConfigurationLoader.load(path: request.planPath)
         try ConfigurationValidationGate.validate(configuration)
-        logger.info("Valid analytics tracking plan: \(request.planPath)")
+        let message = "Valid analytics tracking plan: \(request.planPath)"
+        Spinner.celebrate(message)
+        logger.success(message)
     }
 }
