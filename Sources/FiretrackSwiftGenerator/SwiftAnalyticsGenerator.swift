@@ -17,6 +17,7 @@ package struct SwiftAnalyticsGenerator {
         options: SwiftAnalyticsGeneratorOptions = .init(),
     ) throws -> String {
         let context = SwiftGenerationContext(configuration: configuration, accessLevel: options.accessLevel)
+        let events = resolvedEvents(context)
         var declarations: [DeclSyntaxProtocol] = try [
             analyticsValueEnum(context),
             analyticsValueBridge(context),
@@ -25,9 +26,9 @@ package struct SwiftAnalyticsGenerator {
             declarations.append(screens)
         }
         try declarations.append(contentsOf: allowedValueEnums(context))
-        try declarations.append(contentsOf: itemStructs(context))
-        try declarations.append(analyticsEventEnum(context))
-        try declarations.append(analyticsEventBridge(context))
+        try declarations.append(contentsOf: itemStructs(events, context: context))
+        try declarations.append(analyticsEventEnum(events, context: context))
+        try declarations.append(analyticsEventBridge(events, context: context))
         return Self.render(declarations)
     }
 }

@@ -6,9 +6,9 @@ import SwiftSyntaxBuilder
 extension SwiftAnalyticsGenerator {
     /// One `{Event}Item` struct per event that declares `items`: typed scalar fields plus a
     /// `firebaseDictionary` that maps them into Firebase's untyped item dictionary.
-    func itemStructs(_ context: SwiftGenerationContext) throws -> [StructDeclSyntax] {
+    func itemStructs(_ events: [ResolvedEvent], context: SwiftGenerationContext) throws -> [StructDeclSyntax] {
         let access = context.accessLevel.extensionModifierPrefix
-        return try resolvedEvents(context).filter(\.hasItems).compactMap { event in
+        return try events.filter(\.hasItems).compactMap { event in
             try event.itemStructName.map { try itemStruct(event, structName: $0, access: access) }
         }
     }

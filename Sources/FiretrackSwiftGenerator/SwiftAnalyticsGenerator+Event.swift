@@ -5,8 +5,7 @@ import SwiftSyntaxBuilder
 
 extension SwiftAnalyticsGenerator {
     /// The `AnalyticsEvent` enum: one case per event plus `name` and `parameters`.
-    func analyticsEventEnum(_ context: SwiftGenerationContext) throws -> EnumDeclSyntax {
-        let events = resolvedEvents(context)
+    func analyticsEventEnum(_ events: [ResolvedEvent], context: SwiftGenerationContext) throws -> EnumDeclSyntax {
         let access = context.accessLevel.extensionModifierPrefix
         return try EnumDeclSyntax("\(raw: access)enum AnalyticsEvent: Equatable, Sendable") {
             for event in events {
@@ -30,8 +29,11 @@ extension SwiftAnalyticsGenerator {
     /// The `firebaseParameters` bridge that maps the typed dictionary into Firebase's `[String: Any]`.
     /// When any event carries items, they are appended under the `"items"` key (the literal value
     /// of Firebase's `AnalyticsParameterItems`, kept as a string so the file needs no Firebase import).
-    func analyticsEventBridge(_ context: SwiftGenerationContext) throws -> ExtensionDeclSyntax {
-        let eventsWithItems = resolvedEvents(context).filter(\.hasItems)
+    func analyticsEventBridge(
+        _ events: [ResolvedEvent],
+        context: SwiftGenerationContext,
+    ) throws -> ExtensionDeclSyntax {
+        let eventsWithItems = events.filter(\.hasItems)
         return try ExtensionDeclSyntax(
             "\(raw: context.accessLevel.extensionModifierPrefix)extension AnalyticsEvent",
         ) {

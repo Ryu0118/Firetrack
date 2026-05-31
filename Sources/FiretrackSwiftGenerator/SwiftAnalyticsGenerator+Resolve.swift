@@ -66,8 +66,7 @@ extension SwiftAnalyticsGenerator {
         }.joined(separator: ", ")
     }
 
-    func singleLineDoc(_ text: String?) -> String? {
-        guard let text else { return nil }
+    func singleLineDoc(_ text: String) -> String? {
         let collapsed = text
             .split(whereSeparator: \.isNewline)
             .map { $0.trimmingCharacters(in: .whitespaces) }
