@@ -14,6 +14,7 @@ package struct DoctorRunner {
     /// Prints local YAML and auth readiness checks. When `checkRemote` is set, also reports
     /// GA4 custom definitions that exist remotely but are missing from the plan (read-only).
     package func run(_ request: GA4Request, checkRemote: Bool = false) async throws {
+        Spinner.intro("firetrack doctor")
         let configuration = try AnalyticsConfigurationLoader.load(path: request.planPath)
         let report = AnalyticsConfigurationValidator.validate(configuration)
         logger.status("YAML validation", report.isValid ? "ok" : "failed", isOK: report.isValid)
