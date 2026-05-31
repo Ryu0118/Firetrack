@@ -1,5 +1,6 @@
 @testable import FiretrackConfiguration
 @testable import FiretrackSwiftGenerator
+import Foundation
 import SwiftParser
 import Testing
 
@@ -71,6 +72,48 @@ struct SwiftGeneratorTests {
         // An event without a description gets no doc comment.
         #expect(!source.contains("/// \n    case appOpened"))
         #expect(source.contains("    case appOpened"))
+    }
+
+    @Test
+    func generatesExactGoldenOutput() throws {
+        let yaml = """
+        version: 1
+        platforms: [ios]
+        global_parameters:
+          source:
+            type: enum
+            allowed: [app, widget]
+        screens:
+          DriveRecordScreen:
+            route: tab.record
+        events:
+          recording_completed:
+            description: A drive recording finished.
+            parameters:
+              source:
+                type: enum
+                required: true
+              distance_m:
+                type: double
+                required: true
+              duration_sec:
+                type: int
+                required: false
+              is_manual:
+                type: bool
+                required: true
+          app_opened:
+            parameters: {}
+        """
+        let configuration = try AnalyticsConfigurationLoader.load(yaml: yaml)
+        let source = try SwiftAnalyticsGenerator()
+            .generate(configuration: configuration, options: .init(accessLevel: .public))
+
+        let expected = try String(
+            contentsOf: #require(Bundle.module.url(forResource: "golden_contract", withExtension: "txt")),
+            encoding: .utf8,
+        )
+        #expect(source == expected)
     }
 
     @Test
