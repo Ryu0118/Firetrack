@@ -39,7 +39,7 @@ package enum AnalyticsConfigurationValidator {
         // slip past both the per-occurrence metric-type check and GA4 sync).
         for (parameterName, parameter) in configuration.globalParameters.sorted(by: { $0.key < $1.key }) {
             let path = "global_parameters.\(parameterName)"
-            validateParameter(parameter, name: parameterName, path: path, eventIsPII: false, errors: &errors)
+            validateParameter(parameter, name: parameterName, path: path, errors: &errors)
             validateConsistentDefinition(
                 parameter,
                 name: parameterName,
@@ -58,7 +58,6 @@ package enum AnalyticsConfigurationValidator {
                     parameter,
                     name: parameterName,
                     path: path,
-                    eventIsPII: event.pii == true,
                     errors: &errors,
                 )
                 validateConsistentDefinition(
@@ -103,11 +102,9 @@ package enum AnalyticsConfigurationValidator {
         _ parameter: AnalyticsParameterConfiguration,
         name: String,
         path: String,
-        eventIsPII: Bool,
         errors: inout [AnalyticsConfigurationValidationError],
     ) {
         validateName(name, kind: "parameter", path: path, errors: &errors)
-        validatePII(parameter, path: path, eventIsPII: eventIsPII, errors: &errors)
         if parameter.ga4CustomMetric == true, parameter.type != .int, parameter.type != .double {
             errors.append(.init(path: "\(path).ga4_custom_metric", message: "custom metrics must be int or double"))
         }
@@ -115,31 +112,6 @@ package enum AnalyticsConfigurationValidator {
             for value in allowed where !isSnakeCase(value) {
                 errors.append(.init(path: "\(path).allowed.\(value)", message: "allowed enum values must be snake_case"))
             }
-        }
-    }
-
-    /// Refuses to register a PII parameter as a GA4 custom dimension or metric, because GA4
-    /// must never receive personally identifiable information. A PII parameter may still be
-    /// declared and logged locally — it just cannot become GA4 reporting config. Marking the
-    /// whole event `pii: true` propagates the same constraint to every parameter it carries.
-    private static func validatePII(
-        _ parameter: AnalyticsParameterConfiguration,
-        path: String,
-        eventIsPII: Bool,
-        errors: inout [AnalyticsConfigurationValidationError],
-    ) {
-        guard parameter.pii == true || eventIsPII else { return }
-        if parameter.ga4CustomDimension == true {
-            errors.append(.init(
-                path: "\(path).ga4_custom_dimension",
-                message: "PII parameter must not be registered as a GA4 custom dimension",
-            ))
-        }
-        if parameter.ga4CustomMetric == true {
-            errors.append(.init(
-                path: "\(path).ga4_custom_metric",
-                message: "PII parameter must not be registered as a GA4 custom metric",
-            ))
         }
     }
 

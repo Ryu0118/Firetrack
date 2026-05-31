@@ -16,8 +16,6 @@ package struct AnalyticsParameterConfiguration: Codable, Equatable {
     package var ga4CustomDimension: Bool?
     /// Whether to register the parameter as a GA4 custom metric.
     package var ga4CustomMetric: Bool?
-    /// Whether the parameter contains personally identifiable information.
-    package var pii: Bool?
 
     /// Creates a parameter configuration.
     package init(
@@ -28,7 +26,6 @@ package struct AnalyticsParameterConfiguration: Codable, Equatable {
         displayName: String? = nil,
         ga4CustomDimension: Bool? = nil,
         ga4CustomMetric: Bool? = nil,
-        pii: Bool? = nil,
     ) {
         self.type = type
         self.required = required
@@ -37,7 +34,6 @@ package struct AnalyticsParameterConfiguration: Codable, Equatable {
         self.displayName = displayName
         self.ga4CustomDimension = ga4CustomDimension
         self.ga4CustomMetric = ga4CustomMetric
-        self.pii = pii
     }
 
     enum CodingKeys: String, CodingKey {
@@ -48,7 +44,6 @@ package struct AnalyticsParameterConfiguration: Codable, Equatable {
         case displayName = "display_name"
         case ga4CustomDimension = "ga4_custom_dimension"
         case ga4CustomMetric = "ga4_custom_metric"
-        case pii
     }
 }
 
@@ -73,7 +68,6 @@ package extension AnalyticsParameterConfiguration {
             displayName: override.displayName ?? displayName,
             ga4CustomDimension: override.ga4CustomDimension ?? ga4CustomDimension,
             ga4CustomMetric: override.ga4CustomMetric ?? ga4CustomMetric,
-            pii: override.pii ?? pii,
         )
     }
 }

@@ -12,6 +12,7 @@ package enum AnalyticsConfigurationLoader {
 
     /// Loads a tracking plan from a YAML string.
     package static func load(yaml: String) throws -> AnalyticsTrackingConfiguration {
+        try StrictYAMLSchemaValidator.validate(yaml)
         let decoder = YAMLDecoder()
         return try decoder.decode(AnalyticsTrackingConfiguration.self, from: yaml)
     }

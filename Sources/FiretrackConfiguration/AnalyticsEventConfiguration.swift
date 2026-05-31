@@ -10,8 +10,6 @@ package struct AnalyticsEventConfiguration: Codable, Equatable {
     package var owner: String?
     /// Whether the event is an activation or retention anchor.
     package var retentionAnchor: Bool?
-    /// Whether the event contains personally identifiable information.
-    package var pii: Bool?
     /// Event parameter definitions keyed by parameter name.
     package var parameters: [String: AnalyticsParameterConfiguration]
     /// Item-scoped fields for ECommerce events that carry an `items` array. Valid only on
@@ -23,7 +21,6 @@ package struct AnalyticsEventConfiguration: Codable, Equatable {
         case fireWhen = "fire_when"
         case owner
         case retentionAnchor = "retention_anchor"
-        case pii
         case parameters
         case items
     }
@@ -34,7 +31,6 @@ package struct AnalyticsEventConfiguration: Codable, Equatable {
         fireWhen: String? = nil,
         owner: String? = nil,
         retentionAnchor: Bool? = nil,
-        pii: Bool? = nil,
         parameters: [String: AnalyticsParameterConfiguration] = [:],
         items: [String: AnalyticsItemFieldConfiguration]? = nil,
     ) {
@@ -42,7 +38,6 @@ package struct AnalyticsEventConfiguration: Codable, Equatable {
         self.fireWhen = fireWhen
         self.owner = owner
         self.retentionAnchor = retentionAnchor
-        self.pii = pii
         self.parameters = parameters
         self.items = items
     }
@@ -54,7 +49,6 @@ package struct AnalyticsEventConfiguration: Codable, Equatable {
         fireWhen = try container.decodeIfPresent(String.self, forKey: .fireWhen)
         owner = try container.decodeIfPresent(String.self, forKey: .owner)
         retentionAnchor = try container.decodeIfPresent(Bool.self, forKey: .retentionAnchor)
-        pii = try container.decodeIfPresent(Bool.self, forKey: .pii)
         parameters = try container.decodeIfPresent(
             [String: AnalyticsParameterConfiguration].self,
             forKey: .parameters,
