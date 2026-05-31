@@ -16,6 +16,7 @@ package struct PullRunner {
     /// The result is a scaffold: GA4 has no event/parameter-type schema, so types are
     /// inferred and must be reviewed. Refuses to clobber an existing file.
     package func run(_ request: PullRequest) async throws {
+        Spinner.intro("firetrack pull")
         let outputURL = try FileGuard.prepareOutput(request.outputPath, overwrite: request.overwrite)
         guard let propertyID = GA4DesiredStateExtractor.propertyID(
             from: AnalyticsTrackingConfiguration(version: 1),
@@ -37,7 +38,9 @@ package struct PullRunner {
         let configuration = GA4RemoteStateReverser.configuration(from: remote, propertyID: propertyID)
         let yaml = try AnalyticsConfigurationSerializer.serialize(configuration)
         try yaml.write(to: outputURL, atomically: true, encoding: .utf8)
-        logger.success("Pulled GA4 state into a starter plan: \(outputURL.path(percentEncoded: false))")
+        let message = "Pulled GA4 state into a starter plan: \(outputURL.path(percentEncoded: false))"
+        Spinner.celebrate(message)
+        logger.success(message)
         logger.note("Review it — parameter types are inferred (dimensions ⇒ string, metrics ⇒ double).")
     }
 }
