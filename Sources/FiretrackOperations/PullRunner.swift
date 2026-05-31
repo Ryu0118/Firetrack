@@ -30,12 +30,14 @@ package struct PullRunner {
             serviceAccount: request.impersonateServiceAccount,
             scope: .readonly,
         )
-        let token = try await tokenProvider.accessToken()
-        let remote = try await client.remoteState(propertyID: propertyID, token: token, includeBigQuery: true)
+        let remote = try await Spinner.run("Fetching GA4 state") {
+            let token = try await tokenProvider.accessToken()
+            return try await client.remoteState(propertyID: propertyID, token: token, includeBigQuery: true)
+        }
         let configuration = GA4RemoteStateReverser.configuration(from: remote, propertyID: propertyID)
         let yaml = try AnalyticsConfigurationSerializer.serialize(configuration)
         try yaml.write(to: outputURL, atomically: true, encoding: .utf8)
-        logger.info("Pulled GA4 state into a starter plan: \(outputURL.path(percentEncoded: false))")
-        logger.info("Review it — parameter types are inferred (dimensions ⇒ string, metrics ⇒ double).")
+        logger.success("Pulled GA4 state into a starter plan: \(outputURL.path(percentEncoded: false))")
+        logger.note("Review it — parameter types are inferred (dimensions ⇒ string, metrics ⇒ double).")
     }
 }
