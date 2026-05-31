@@ -248,6 +248,16 @@ struct ConfigurationTests {
                 """,
                 expectedErrorFragment: "item field uses a reserved prefix",
             ),
+            (
+                yaml: """
+                version: 1
+                events:
+                  purchase:
+                    items:
+                      custom_size: { type: enum }
+                """,
+                expectedErrorFragment: "item fields cannot be enum",
+            ),
         ],
     )
     func itemsValidationRejectsMisuse(yaml: String, expectedErrorFragment: String) throws {

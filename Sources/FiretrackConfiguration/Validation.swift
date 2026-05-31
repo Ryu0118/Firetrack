@@ -169,21 +169,20 @@ package enum AnalyticsConfigurationValidator {
         }
     }
 
-    /// Errors for one item field: reserved fields must match their canonical type, custom fields
-    /// must be valid names, and any `allowed` enum values must be snake_case.
+    /// Errors for one item field. Item fields are scalar only (no `enum` — item-scoped enum
+    /// value types are not generated yet); reserved fields must match their canonical type, and
+    /// custom fields must be valid names.
     private static func itemFieldErrors(
         _ field: AnalyticsItemFieldConfiguration,
         name: String,
         path: String,
     ) -> [AnalyticsConfigurationValidationError] {
-        let allowedErrors = (field.allowed ?? []).filter { !isSnakeCase($0) }.map {
-            AnalyticsConfigurationValidationError(
-                path: "\(path).allowed.\($0)",
-                message: "allowed enum values must be snake_case",
-            )
-        }
+        let enumErrors: [AnalyticsConfigurationValidationError] = field.type == .enumeration ? [.init(
+            path: "\(path).type",
+            message: "item fields cannot be enum",
+        )] : []
         guard let reservedType = ECommerceItemsSpec.reservedFieldTypes[name] else {
-            return nameErrors(name, kind: "item field", path: path) + allowedErrors
+            return nameErrors(name, kind: "item field", path: path) + enumErrors
         }
         let typeErrors = field.type == reservedType ? [] : [
             AnalyticsConfigurationValidationError(
@@ -191,7 +190,7 @@ package enum AnalyticsConfigurationValidator {
                 message: "reserved item field \(name) must be \(reservedType.rawValue)",
             ),
         ]
-        return typeErrors + allowedErrors
+        return typeErrors + enumErrors
     }
 
     /// Snake_case and reserved-prefix errors for a name. The pure core of `validateName`.

@@ -7,12 +7,10 @@ import Foundation
 /// custom definitions use a separate GA4 quota and are not synced yet (item values still
 /// reach BigQuery without registration).
 package struct AnalyticsItemFieldConfiguration: Codable, Equatable {
-    /// Field value type (scalar only).
+    /// Field value type (scalar only — `enum` is not allowed on item fields).
     package var type: AnalyticsParameterType
     /// Whether instrumentation must provide the field.
     package var required: Bool?
-    /// Allowed enum values for bounded string fields.
-    package var allowed: [String]?
     /// Human-readable description.
     package var description: String?
     /// Display name for the field.
@@ -22,13 +20,11 @@ package struct AnalyticsItemFieldConfiguration: Codable, Equatable {
     package init(
         type: AnalyticsParameterType,
         required: Bool? = nil,
-        allowed: [String]? = nil,
         description: String? = nil,
         displayName: String? = nil,
     ) {
         self.type = type
         self.required = required
-        self.allowed = allowed
         self.description = description
         self.displayName = displayName
     }
@@ -36,7 +32,6 @@ package struct AnalyticsItemFieldConfiguration: Codable, Equatable {
     enum CodingKeys: String, CodingKey {
         case type
         case required
-        case allowed
         case description
         case displayName = "display_name"
     }
