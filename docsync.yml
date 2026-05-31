@@ -27,10 +27,16 @@ rules:
   sources:
   - Sources/FiretrackSwiftGenerator/SwiftAnalyticsGenerator.swift
   - Sources/FiretrackSwiftGenerator/SwiftAnalyticsGeneratorOptions.swift
+  - Sources/FiretrackSwiftGenerator/SwiftAnalyticsGenerator+Value.swift
+  - Sources/FiretrackSwiftGenerator/SwiftAnalyticsGenerator+Enums.swift
+  - Sources/FiretrackSwiftGenerator/SwiftAnalyticsGenerator+Event.swift
+  - Sources/FiretrackSwiftGenerator/SwiftAnalyticsGenerator+Items.swift
+  - Sources/FiretrackSwiftGenerator/SwiftAnalyticsGenerator+Resolve.swift
+  - Sources/FiretrackSwiftGenerator/SwiftSyntaxRendering.swift
   doc: README.md
   message: "Swift codegen output shape changed \u2014 update README (Quick start generated
     example)."
-  checksum: ce9cde82b20eaae1e904b2877303ae3014671212b3ad65ae779587f32311c46b
+  checksum: 0bcb7ce39cf56814c29ea4ebb59a705787fe571a0702b91af284f985080a4183
 - name: agents-architecture
   sources:
   - Package.swift

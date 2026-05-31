@@ -20,16 +20,7 @@ extension SwiftAnalyticsGenerator {
 }
 
 extension SwiftAccessLevel {
-    /// Declaration modifiers for a generated top-level type (`public`/`package`, none for internal).
-    var declModifiers: DeclModifierListSyntax {
-        switch self {
-        case .public: [DeclModifierSyntax(name: .keyword(.public))]
-        case .package: [DeclModifierSyntax(name: .keyword(.package))]
-        case .internal: []
-        }
-    }
-
-    /// The `public ` / `package ` prefix written before `extension`, or empty for internal.
+    /// The `public ` / `package ` prefix written before a declaration, or empty for internal.
     var extensionModifierPrefix: String {
         self == .internal ? "" : "\(rawValue) "
     }
