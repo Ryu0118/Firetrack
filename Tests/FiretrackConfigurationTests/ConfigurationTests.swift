@@ -197,6 +197,84 @@ struct ConfigurationTests {
     }
 
     @Test
+    func itemsOnAReservedEcommerceEventWithValidFieldsIsValid() throws {
+        let yaml = """
+        version: 1
+        events:
+          purchase:
+            parameters:
+              value:
+                type: double
+            items:
+              item_id: { type: string }
+              price: { type: double }
+              quantity: { type: int }
+              custom_size: { type: string }
+        """
+        let configuration = try AnalyticsConfigurationLoader.load(yaml: yaml)
+        #expect(AnalyticsConfigurationValidator.validate(configuration).isValid)
+    }
+
+    @Test(
+        "items validation rejects misuse",
+        arguments: [
+            (
+                yaml: """
+                version: 1
+                events:
+                  custom_thing:
+                    items:
+                      item_id: { type: string }
+                """,
+                expectedErrorFragment: "items is only valid on a reserved ecommerce event",
+            ),
+            (
+                yaml: """
+                version: 1
+                events:
+                  purchase:
+                    items:
+                      price: { type: string }
+                """,
+                expectedErrorFragment: "reserved item field price must be double",
+            ),
+            (
+                yaml: """
+                version: 1
+                events:
+                  purchase:
+                    items:
+                      firebase_extra: { type: string }
+                """,
+                expectedErrorFragment: "item field uses a reserved prefix",
+            ),
+        ],
+    )
+    func itemsValidationRejectsMisuse(yaml: String, expectedErrorFragment: String) throws {
+        let configuration = try AnalyticsConfigurationLoader.load(yaml: yaml)
+        let errors = AnalyticsConfigurationValidator.validate(configuration).errors.map(\.description)
+        #expect(errors.contains { $0.contains(expectedErrorFragment) })
+        #expect(errors == errors.sorted())
+    }
+
+    @Test
+    func itemsRejectsMoreThan27CustomFields() throws {
+        let customFields = (1 ... 28)
+            .map { "      custom_\($0): { type: string }" }
+            .joined(separator: "\n")
+        let yaml = """
+        version: 1
+        events:
+          purchase:
+            items:
+        \(customFields)
+        """
+        let configuration = try AnalyticsConfigurationLoader.load(yaml: yaml)
+        let errors = AnalyticsConfigurationValidator.validate(configuration).errors.map(\.description)
+        #expect(errors.contains { $0.contains("more than 27 custom item parameters") })
+    }
+
+    @Test
     func piiParameterWithoutGA4RegistrationIsValid() throws {
         let yaml = """
         version: 1

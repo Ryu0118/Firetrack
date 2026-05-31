@@ -69,6 +69,8 @@ package enum AnalyticsConfigurationValidator {
                     errors: &errors,
                 )
             }
+
+            validateItems(event.items, eventName: eventName, errors: &errors)
         }
 
         for keyEvent in configuration.ga4Sync?.keyEvents ?? [] {
@@ -141,18 +143,80 @@ package enum AnalyticsConfigurationValidator {
         }
     }
 
-    private static func validateName(
+    /// Validates an event's ECommerce `items` block: it is only valid on a reserved ECommerce
+    /// event, reserved item fields must use their canonical type, and unknown fields are custom
+    /// item-scoped parameters (scalar, snake_case, no reserved prefix, capped at 27).
+    private static func validateItems(
+        _ items: [String: AnalyticsItemFieldConfiguration]?,
+        eventName: String,
+        errors: inout [AnalyticsConfigurationValidationError],
+    ) {
+        guard let items else { return }
+        let base = "events.\(eventName).items"
+        let fields = items.sorted { $0.key < $1.key }
+
+        if !ECommerceItemsSpec.itemsEvents.contains(eventName) {
+            errors.append(.init(path: base, message: "items is only valid on a reserved ecommerce event"))
+        }
+        errors += fields.flatMap { itemFieldErrors($0.value, name: $0.key, path: "\(base).\($0.key)") }
+
+        let customCount = fields.lazy.count { ECommerceItemsSpec.reservedFieldTypes[$0.key] == nil }
+        if customCount > ECommerceItemsSpec.maxCustomItemParameters {
+            errors.append(.init(
+                path: base,
+                message: "more than \(ECommerceItemsSpec.maxCustomItemParameters) custom item parameters",
+            ))
+        }
+    }
+
+    /// Errors for one item field: reserved fields must match their canonical type, custom fields
+    /// must be valid names, and any `allowed` enum values must be snake_case.
+    private static func itemFieldErrors(
+        _ field: AnalyticsItemFieldConfiguration,
+        name: String,
+        path: String,
+    ) -> [AnalyticsConfigurationValidationError] {
+        let allowedErrors = (field.allowed ?? []).filter { !isSnakeCase($0) }.map {
+            AnalyticsConfigurationValidationError(
+                path: "\(path).allowed.\($0)",
+                message: "allowed enum values must be snake_case",
+            )
+        }
+        guard let reservedType = ECommerceItemsSpec.reservedFieldTypes[name] else {
+            return nameErrors(name, kind: "item field", path: path) + allowedErrors
+        }
+        let typeErrors = field.type == reservedType ? [] : [
+            AnalyticsConfigurationValidationError(
+                path: "\(path).type",
+                message: "reserved item field \(name) must be \(reservedType.rawValue)",
+            ),
+        ]
+        return typeErrors + allowedErrors
+    }
+
+    /// Snake_case and reserved-prefix errors for a name. The pure core of `validateName`.
+    private static func nameErrors(
         _ name: String,
         kind: String,
         path: String,
-        errors: inout [AnalyticsConfigurationValidationError],
-    ) {
+    ) -> [AnalyticsConfigurationValidationError] {
+        var errors: [AnalyticsConfigurationValidationError] = []
         if !isSnakeCase(name) {
             errors.append(.init(path: path, message: "\(kind) must be snake_case"))
         }
         if usesReservedPrefix(name) {
             errors.append(.init(path: path, message: "\(kind) uses a reserved prefix"))
         }
+        return errors
+    }
+
+    private static func validateName(
+        _ name: String,
+        kind: String,
+        path: String,
+        errors: inout [AnalyticsConfigurationValidationError],
+    ) {
+        errors += nameErrors(name, kind: kind, path: path)
     }
 
     /// Ensures every occurrence of a parameter name agrees on the attributes that drive
