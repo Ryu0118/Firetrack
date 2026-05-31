@@ -55,8 +55,19 @@ Verify with `firetrack --version`.
 
 Firetrack ships a **`firetrack`** [Agent Skill](https://agentskills.io) so your AI agent
 can install the CLI and adopt it in a project for you — set up `firetrack.yml`,
-generate the Swift contract, and wire it into CI. Install it:
+generate the Swift contract, and wire it into CI.
 
+**GitHub CLI** — for GitHub Copilot and any agent that reads `~/.agents/skills`:
+```bash
+gh skill install Ryu0118/Firetrack firetrack
+```
+
+**Claude Code** — installs to `~/.claude/skills/firetrack`:
+```bash
+gh skill install Ryu0118/Firetrack firetrack --agent claude-code --scope user
+```
+
+**npx skills** — alternative for agents that read `~/.agents/skills`:
 ```bash
 npx skills add Ryu0118/Firetrack --skill firetrack -g
 ```
@@ -78,6 +89,7 @@ Then tell your agent:
    platforms: [ios]
    events:
      recording_completed:
+       description: Drive recording completed and saved successfully.
        parameters:
          source:
            type: enum

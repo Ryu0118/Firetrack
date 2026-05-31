@@ -74,6 +74,7 @@ version: 1
 platforms: [ios]
 events:
   recording_completed:
+    description: Drive recording completed and saved successfully.
     parameters:
       source:
         type: enum
