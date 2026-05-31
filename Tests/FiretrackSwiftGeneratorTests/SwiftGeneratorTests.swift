@@ -72,4 +72,30 @@ struct SwiftGeneratorTests {
         #expect(!source.contains("/// \n    case appOpened"))
         #expect(source.contains("    case appOpened"))
     }
+
+    @Test
+    func emitsFirebaseBridgeWithoutDependingOnFirebase() throws {
+        let yaml = """
+        version: 1
+        events:
+          recording_completed:
+            parameters:
+              distance_m:
+                type: double
+                required: true
+        """
+        let configuration = try AnalyticsConfigurationLoader.load(yaml: yaml)
+        let generator = SwiftAnalyticsGenerator()
+
+        let source = try generator.generate(configuration: configuration, options: .init(accessLevel: .package))
+
+        #expect(!Parser.parse(source: source).hasError)
+        // The Firebase bridge is generated so apps don't hand-write it.
+        #expect(source.contains("var firebaseValue: Any {"))
+        #expect(source.contains("var firebaseParameters: [String: Any] {"))
+        #expect(source.contains("parameters.mapValues(\\.firebaseValue)"))
+        // The generated file stays Firebase-SDK-free: no import, no logEvent call.
+        #expect(!source.contains("import FirebaseAnalytics"))
+        #expect(!source.contains("Analytics.logEvent"))
+    }
 }

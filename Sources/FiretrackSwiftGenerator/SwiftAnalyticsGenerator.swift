@@ -19,9 +19,11 @@ package struct SwiftAnalyticsGenerator {
         let source = render {
             header()
             analyticsValue(context: context)
+            analyticsValueFirebaseBridge(context: context)
             analyticsScreen(context: context)
             allowedValueEnums(context: context)
             analyticsEvent(context: context)
+            analyticsEventFirebaseBridge(context: context)
         }
 
         let parsed = Parser.parse(source: source)
@@ -72,6 +74,22 @@ package struct SwiftAnalyticsGenerator {
     }
 
     @SwiftSourceBuilder
+    private func analyticsValueFirebaseBridge(context: SwiftGenerationContext) -> [String] {
+        "\(context.access)extension AnalyticsValue {"
+        "    /// The underlying value, boxed for Firebase's untyped parameter dictionary."
+        "    var firebaseValue: Any {"
+        "        switch self {"
+        "        case let .string(value): value"
+        "        case let .int(value): value"
+        "        case let .double(value): value"
+        "        case let .bool(value): value"
+        "        }"
+        "    }"
+        "}"
+        ""
+    }
+
+    @SwiftSourceBuilder
     private func analyticsScreen(context: SwiftGenerationContext) -> [String] {
         "\(context.access)enum AnalyticsScreen: String, CaseIterable, Sendable {"
         for screenName in context.configuration.screens.keys.sorted() {
@@ -111,6 +129,17 @@ package struct SwiftAnalyticsGenerator {
         eventNameProperty(events, context: context)
         ""
         eventParametersProperty(events, context: context)
+        "}"
+        ""
+    }
+
+    @SwiftSourceBuilder
+    private func analyticsEventFirebaseBridge(context: SwiftGenerationContext) -> [String] {
+        "\(context.access)extension AnalyticsEvent {"
+        "    /// The event's parameters mapped into Firebase's untyped dictionary."
+        "    var firebaseParameters: [String: Any] {"
+        "        parameters.mapValues(\\.firebaseValue)"
+        "    }"
         "}"
         ""
     }
