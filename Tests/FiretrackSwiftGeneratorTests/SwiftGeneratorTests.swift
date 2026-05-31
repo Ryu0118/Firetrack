@@ -117,6 +117,36 @@ struct SwiftGeneratorTests {
     }
 
     @Test
+    func generatesItemStructAndItemsBridge() throws {
+        let yaml = """
+        version: 1
+        events:
+          purchase:
+            parameters:
+              value:
+                type: double
+                required: true
+            items:
+              item_id: { type: string, required: true }
+              price: { type: double, required: true }
+              quantity: { type: int }
+        """
+        let configuration = try AnalyticsConfigurationLoader.load(yaml: yaml)
+        let source = try SwiftAnalyticsGenerator()
+            .generate(configuration: configuration, options: .init(accessLevel: .public))
+
+        #expect(!Parser.parse(source: source).hasError)
+        #expect(source.contains("public struct PurchaseItem: Equatable, Sendable {"))
+        #expect(source.contains("public var itemId: String"))
+        #expect(source.contains("public var quantity: Int?"))
+        #expect(source.contains("var firebaseDictionary: [String: Any] {"))
+        #expect(source.contains("case purchase(value: Double, items: [PurchaseItem])"))
+        #expect(source.contains("case let .purchase(value, _):"))
+        #expect(source.contains("dictionary[\"items\"] = items.map(\\.firebaseDictionary)"))
+        #expect(!source.contains("import FirebaseAnalytics"))
+    }
+
+    @Test
     func emitsFirebaseBridgeWithoutDependingOnFirebase() throws {
         let yaml = """
         version: 1
