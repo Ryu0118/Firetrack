@@ -21,8 +21,8 @@ extension Logger {
     }
 
     /// Emits a horizontal rule (interactive only); a no-op otherwise.
-    func rule() {
-        guard let rule = style.rule() else { return }
+    func rule(phase: Int = 0) {
+        guard let rule = style.marqueeRule(phase: phase) else { return }
         info("\(rule)")
     }
 
@@ -33,7 +33,7 @@ extension Logger {
 
     /// Emits `"Mode: {value}"`, rendered as a flask-tagged colored pill when interactive.
     func mode(_ value: String, color: Style.Attribute) {
-        info("\(style.icon(.flask))Mode: \(style.pill(value, color))")
+        info("\(style.icon(.flask))Mode: \(style.pill(value, color, blink: true))")
     }
 
     /// Emits a section heading `"\n{title}"`, bold-cyan with an icon when interactive.

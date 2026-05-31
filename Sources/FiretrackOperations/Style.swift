@@ -1,6 +1,7 @@
 import Foundation
 
-/// Terminal styling primitives: ANSI colors, emoji glyphs, and decorations.
+/// Terminal styling primitives: ANSI colors, truecolor gradients, emoji glyphs,
+/// and decorations.
 ///
 /// Styling is applied only when output is interactive (a TTY) and color is not
 /// suppressed. When disabled, every helper returns the bare text so piped, CI,
@@ -16,6 +17,7 @@ struct Style {
     enum Attribute {
         case bold
         case dim
+        case blink
         case red
         case green
         case yellow
@@ -27,6 +29,7 @@ struct Style {
             switch self {
             case .bold: "1"
             case .dim: "2"
+            case .blink: "5"
             case .red: "31"
             case .green: "32"
             case .yellow: "33"
@@ -65,6 +68,26 @@ struct Style {
         return "\u{1B}[\(codes)m\(text)\(Self.reset)"
     }
 
+    /// Colors each character along a rainbow hue wheel, scrolled by `phase`.
+    ///
+    /// Produces the flowing-gradient effect; returns `text` unchanged when disabled.
+    /// `bold` brightens the run for a more saturated, arcade-like look.
+    func gradient(_ text: String, phase: Int = 0, bold: Bool = true) -> String {
+        guard isEnabled else { return text }
+        let weight = bold ? "1;" : ""
+        var out = ""
+        for (offset, character) in text.enumerated() {
+            if character == " " {
+                out.append(character)
+                continue
+            }
+            let hue = Double((offset * 14 + phase) % 360)
+            let (red, green, blue) = Self.hueToRGB(hue)
+            out += "\u{1B}[\(weight)38;2;\(red);\(green);\(blue)m\(character)"
+        }
+        return out + Self.reset
+    }
+
     /// Returns the glyph followed by a space when enabled, otherwise an empty string.
     ///
     /// Multi-scalar emoji (e.g. variation selectors) get an extra space so they
@@ -81,21 +104,48 @@ struct Style {
         return paint(String(repeating: "━", count: width), .magenta, .dim)
     }
 
+    /// Returns a rainbow horizontal rule scrolled by `phase`, or `nil` when disabled.
+    func marqueeRule(_ width: Int = 34, phase: Int = 0) -> String? {
+        guard isEnabled else { return nil }
+        return gradient(String(repeating: "━", count: width), phase: phase)
+    }
+
     /// Returns a colored, bracketed status pill when enabled, else the bare label.
-    func pill(_ text: String, _ color: Attribute) -> String {
+    ///
+    /// When `blink` is set the pill pulses, drawing the eye to an active mode.
+    func pill(_ text: String, _ color: Attribute, blink: Bool = false) -> String {
         guard isEnabled else { return text }
-        return paint(" \(text.uppercased()) ", .bold, color)
+        return blink
+            ? paint(" \(text.uppercased()) ", .bold, .blink, color)
+            : paint(" \(text.uppercased()) ", .bold, color)
     }
 
     /// Returns banner box lines for a title, or `nil` when disabled (so callers skip it).
-    func banner(_ title: String) -> [String]? {
+    ///
+    /// The title is rendered as a rainbow gradient scrolled by `phase`.
+    func banner(_ title: String, phase: Int = 0) -> [String]? {
         guard isEnabled else { return nil }
         let label = "\(Glyph.fire.rawValue) \(title)"
         let inner = label.count + 5
         let top = "╭" + String(repeating: "─", count: inner) + "╮"
-        let mid = "│  " + label + "   │"
+        let mid = "│  " + gradient(label, phase: phase) + "   │"
         let bottom = "╰" + String(repeating: "─", count: inner) + "╯"
-        return [paint(top, .magenta, .bold), paint(mid, .bold, .magenta), paint(bottom, .magenta, .bold)]
+        return [gradient(top, phase: phase), paint(mid, .bold), gradient(bottom, phase: phase + 60)]
+    }
+
+    private static func hueToRGB(_ hue: Double) -> (Int, Int, Int) {
+        let sector = hue / 60.0
+        let chroma = 1.0
+        let secondary = chroma * (1 - abs(sector.truncatingRemainder(dividingBy: 2) - 1))
+        let (red, green, blue): (Double, Double, Double) = switch Int(sector) % 6 {
+        case 0: (chroma, secondary, 0)
+        case 1: (secondary, chroma, 0)
+        case 2: (0, chroma, secondary)
+        case 3: (0, secondary, chroma)
+        case 4: (secondary, 0, chroma)
+        default: (chroma, 0, secondary)
+        }
+        return (Int(red * 255), Int(green * 255), Int(blue * 255))
     }
 
     private static func resolveInteractive() -> Bool {
