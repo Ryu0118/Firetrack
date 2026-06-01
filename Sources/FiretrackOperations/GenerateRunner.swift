@@ -9,7 +9,6 @@ package struct GenerateRunner {
 
     /// Generates a Swift analytics contract from YAML.
     package func run(_ request: GenerateRequest) throws {
-        Spinner.intro("firetrack generate")
         let configuration = try AnalyticsConfigurationLoader.load(path: request.planPath)
         try ConfigurationValidationGate.validate(configuration)
         guard let accessLevel = SwiftAccessLevel(rawValue: request.accessLevel) else {

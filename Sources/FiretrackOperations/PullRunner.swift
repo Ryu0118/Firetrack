@@ -16,7 +16,6 @@ package struct PullRunner {
     /// The result is a scaffold: GA4 has no event/parameter-type schema, so types are
     /// inferred and must be reviewed. Refuses to clobber an existing file.
     package func run(_ request: PullRequest) async throws {
-        Spinner.intro("firetrack pull")
         let outputURL = try FileGuard.prepareOutput(request.outputPath, overwrite: request.overwrite)
         guard let propertyID = GA4DesiredStateExtractor.propertyID(
             from: AnalyticsTrackingConfiguration(version: 1),

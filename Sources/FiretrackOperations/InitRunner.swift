@@ -8,7 +8,6 @@ package struct InitRunner {
 
     /// Writes a starter tracking-plan YAML, refusing to clobber an existing file.
     package func run(_ request: InitRequest) throws {
-        Spinner.intro("firetrack init")
         let outputURL = try FileGuard.prepareOutput(request.outputPath, overwrite: request.overwrite)
         try Self.template.write(to: outputURL, atomically: true, encoding: .utf8)
         let message = "Wrote starter tracking plan: \(outputURL.path(percentEncoded: false))"
