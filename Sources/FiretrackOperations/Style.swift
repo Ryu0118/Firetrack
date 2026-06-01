@@ -1,4 +1,5 @@
 import Foundation
+import Synchronization
 
 /// Terminal styling primitives: ANSI colors, truecolor gradients, emoji glyphs,
 /// and decorations.
@@ -10,8 +11,18 @@ struct Style {
     /// Whether color, emoji, and decorations are emitted.
     let isEnabled: Bool
 
-    /// The shared style resolved once from the runtime environment.
-    static let terminal = Style(isEnabled: Self.resolveInteractive())
+    /// When set, styling is forced off regardless of TTY (the `--silent` flag).
+    private static let forcedPlain = Mutex(false)
+
+    /// The shared style, recomputed per access so a late `--silent` still takes effect.
+    static var terminal: Style {
+        Style(isEnabled: resolveInteractive())
+    }
+
+    /// Forces all styling off (or restores TTY-based behavior). Drives `--silent`.
+    static func setForcedPlain(_ value: Bool) {
+        forcedPlain.withLock { $0 = value }
+    }
 
     /// An ANSI text/foreground attribute.
     enum Attribute {
@@ -157,6 +168,7 @@ struct Style {
     }
 
     private static func resolveInteractive() -> Bool {
+        if forcedPlain.withLock({ $0 }) { return false }
         let env = ProcessInfo.processInfo.environment
         if env["NO_COLOR"] != nil { return false }
         if env["FIRETRACK_NO_COLOR"] != nil { return false }
