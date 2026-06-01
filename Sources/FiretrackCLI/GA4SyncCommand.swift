@@ -13,9 +13,12 @@ struct GA4SyncCommand: AsyncParsableCommand {
     @Flag(help: "Preview the changes without creating any GA4 resources.")
     var dryRun = false
 
+    @OptionGroup var global: GlobalOptions
+
     init() {}
 
     func run() async throws {
+        global.apply()
         try await GA4SyncRunner().run(options.request(apply: !dryRun))
     }
 }

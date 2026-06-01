@@ -10,9 +10,12 @@ struct GA4DiffCommand: AsyncParsableCommand {
 
     @OptionGroup var options: GA4Options
 
+    @OptionGroup var global: GlobalOptions
+
     init() {}
 
     func run() async throws {
+        global.apply()
         try await GA4DiffRunner().run(options.request(apply: false))
     }
 }
