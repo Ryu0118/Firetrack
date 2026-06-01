@@ -15,6 +15,7 @@ let package = Package(
         .package(url: "https://github.com/jpsim/Yams", from: "6.2.2"),
         .package(url: "https://github.com/swiftlang/swift-syntax", from: "603.0.1"),
         .package(url: "https://github.com/apple/swift-log", from: "1.6.0"),
+        .package(url: "https://github.com/Ryu0118/SlotKit", from: "0.1.0"),
     ],
     targets: [
         .executableTarget(
@@ -37,6 +38,7 @@ let package = Package(
                 "FiretrackGA4",
                 "FiretrackSwiftGenerator",
                 .product(name: "Logging", package: "swift-log"),
+                .product(name: "SlotKit", package: "SlotKit"),
             ],
         ),
         .target(

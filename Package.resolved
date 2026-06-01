@@ -1,6 +1,15 @@
 {
-  "originHash" : "27531bfba56c55920ebc29c3dfe594ae89cf16a6928691905bc13dd6e7b4346e",
+  "originHash" : "7590b256d9c9d8b5fb493a28e6c802254c43578bcf5788b1286cf8d2a2d66383",
   "pins" : [
+    {
+      "identity" : "slotkit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Ryu0118/SlotKit",
+      "state" : {
+        "revision" : "0e176bfefa565fd3dc90f06abd4b1984a714bf1e",
+        "version" : "0.1.0"
+      }
+    },
     {
       "identity" : "swift-argument-parser",
       "kind" : "remoteSourceControl",

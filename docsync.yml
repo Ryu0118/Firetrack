@@ -46,4 +46,4 @@ rules:
   doc: AGENTS.md
   message: "Module graph, logging setup, or entry point changed \u2014 update AGENTS.md
     (Architecture / Conventions)."
-  checksum: 10130de72ff1a8f5691245fe32224cc241631ccda8c8c9453954dee6a021c18a
+  checksum: 13d0825cd23a99aeaad7b0b1adc2da4495aa82d86252b0b48946eab64c7a54e9

@@ -1,6 +1,7 @@
 import FiretrackConfiguration
 import FiretrackGA4
 import Foundation
+import SlotKit
 
 /// Runner for the `firetrack doctor` command.
 package struct DoctorRunner {
@@ -54,17 +55,17 @@ package struct DoctorRunner {
         let propertyID = inputs.propertyID
         let configuration = inputs.configuration
         let yamlValid = inputs.report.isValid
-        var reels: [SlotMachine.Check] = [
-            .init(label: "YAML") { yamlValid },
-            .init(label: "PROP") { propertyID != nil },
-            .init(label: "AUTH") {
+        var reels: [SlotReel] = [
+            SlotReel(label: "YAML") { yamlValid },
+            SlotReel(label: "PROP") { propertyID != nil },
+            SlotReel(label: "AUTH") {
                 let result = await Self.authResult(serviceAccount: serviceAccount)
                 await probe.setAuth(result)
                 return result.passed
             },
         ]
         if inputs.checkRemote {
-            reels.append(.init(label: "DRIFT") {
+            reels.append(SlotReel(label: "DRIFT") {
                 let result = await Self.driftResult(
                     client: client,
                     configuration: configuration,
@@ -75,7 +76,10 @@ package struct DoctorRunner {
                 return result.passed
             })
         }
-        return await SlotMachine.spin(reels)
+        // Force `plain` from Firetrack's single styling source of truth (TTY + NO_COLOR
+        // + `--silent`), which SlotKit's own auto-detect can't see. When plain, SlotKit
+        // draws nothing — `reportDetails` is then the sole owner of plain output.
+        return await SlotMachine.spin(reels, plain: !Style.terminal.isEnabled).allPassed
     }
 
     /// Prints the settled, detailed check lines beneath the slot, then the verdict.
