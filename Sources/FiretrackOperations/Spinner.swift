@@ -46,16 +46,18 @@ enum Spinner {
         }
     }
 
-    /// Builds one procedurally-flickering flame frame; every row is exactly `flameWidth`
-    /// wide. Upper rows wobble and throw sparks so each `step` looks alive.
+    /// Builds one flame frame: a body that widens toward the base with a hash-jittered
+    /// edge, soft rounded shoulders, and sparks flicking off the tip — every `step`
+    /// differs so the burn looks alive. Each row is exactly `flameWidth` columns.
     private static func flameFrame(step: Int) -> [String] {
         let center = flameWidth / 2
         var rows: [String] = []
         for row in 0 ..< flameRows {
             let depth = Double(row) / Double(flameRows - 1)
-            var half = Int(depth * depth * Double(center))
-            if row < flameRows - 2 { half += (hash(row, 0, step) % 3) - 1 }
-            half = max(0, min(center, half))
+            // Quadratic taper (narrow tip, broad base) plus a per-row breathing jitter.
+            var half = Int(depth * depth * Double(center) + 0.5)
+            half += (hash(row, 1, step) % 3) - 1
+            half = max(row == 0 ? 0 : 1, min(center, half))
             var line = ""
             for column in 0 ..< flameWidth {
                 line += cell(row: row, column: column, center: center, half: half, step: step)
@@ -65,14 +67,19 @@ enum Spinner {
         return rows
     }
 
-    /// Resolves one flame cell: solid core, flickering jagged edge, or a stray spark up top.
+    /// Resolves one flame cell: solid core, a rounded flickering edge, or a stray
+    /// spark drifting off the top two rows.
     private static func cell(row: Int, column: Int, center: Int, half: Int, step: Int) -> String {
         let dist = abs(column - center)
-        if dist < half { return "█" }
+        let noise = hash(row, column, step)
+        if dist < half - 1 { return "█" }
+        if dist == half - 1 { return noise % 5 == 0 ? (column < center ? "▟" : "▙") : "█" }
         if dist == half, half > 0 {
-            return hash(row, column, step) % 4 == 0 ? " " : (column < center ? "▟" : "▙")
+            if noise % 4 == 0 { return " " }
+            return column < center ? "▟" : "▙"
         }
-        if row <= 1, dist <= half + 1, hash(row, column, step) % 3 == 0 { return "▖" }
+        if dist == half + 1, half > 0, noise % 3 == 0 { return column < center ? "▗" : "▖" }
+        if row <= 1, dist <= half + 2, noise % 3 == 0 { return ["▘", "▝", "▖", "▗"][noise % 4] }
         return " "
     }
 
