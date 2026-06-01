@@ -13,7 +13,6 @@ package struct GA4DiffRunner {
     /// Prints missing GA4 resources without mutating remote state.
     package func run(_ request: GA4Request) async throws {
         let context = try GA4ContextFactory.make(request)
-        Spinner.intro("firetrack ga4 diff")
         logger.field("GA4 property", context.propertyID, icon: .target, valueColor: .cyan)
         logger.mode("dry-run", color: .yellow)
         do {

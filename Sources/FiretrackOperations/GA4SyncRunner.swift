@@ -13,7 +13,6 @@ package struct GA4SyncRunner {
     /// Diffs remote state and creates missing resources only when `request.apply` is true.
     package func run(_ request: GA4Request) async throws {
         let context = try GA4ContextFactory.make(request)
-        Spinner.intro("firetrack ga4 sync")
         logger.field("GA4 property", context.propertyID, icon: .target, valueColor: .cyan)
         logger.mode(request.apply ? "apply" : "dry-run", color: request.apply ? .green : .yellow)
         let token = try await context.tokenProvider.accessToken()
