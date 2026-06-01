@@ -1,30 +1,24 @@
 import Foundation
 
-/// Interactive terminal effects: an async progress spinner plus short, flashy
+/// Interactive terminal effects: an async progress flame plus short, flashy
 /// gradient animations for command intros and completions.
 ///
 /// Every effect is TTY-only — when output is not interactive (pipes, CI, tests)
 /// each call awaits its work or returns immediately and emits nothing, keeping
-/// output deterministic. Animations are intentionally brief (~0.4s).
+/// output deterministic. Animations are intentionally brief.
 enum Spinner {
     private static let clearLine = "\r\u{1B}[K"
     private static let reset = "\u{1B}[0m"
-
-    /// Flickering flame frames (6 rows each) cycled while work is in flight.
-    private static let flame: [[String]] = [
-        ["    ▄    ", "   ▟█▖   ", "  ▟██▙   ", " ▗████▖  ", " ▟█████▖ ", "▟███████▖"],
-        ["    ▖    ", "   ▗█▖   ", "   ▟█▙   ", "  ▟███▖  ", " ▗█████▖ ", "▟███████▖"],
-        ["    ▗    ", "   ▗█▄   ", "  ▗██▙   ", "  ▟███▙  ", " ▟█████▙ ", "▟███████▖"],
-        ["   ▖     ", "   ▟▙    ", "  ▟██▖   ", " ▗███▙▖  ", " ▟█████▖ ", "▟███████▖"],
-    ]
-    private static let flameRows = 6
-    /// Bottom-to-top heat: deep red → orange → yellow.
+    private static let flameWidth = 11
+    private static let flameRows = 7
+    /// Top-to-bottom heat: bright yellow tips → deep-red base.
     private static let heat: [(Int, Int, Int)] = [
-        (255, 70, 0), (255, 70, 0), (255, 120, 0), (255, 170, 0), (255, 215, 40), (255, 245, 120),
+        (255, 245, 150), (255, 225, 90), (255, 195, 30), (255, 160, 0),
+        (255, 120, 0), (255, 80, 0), (255, 55, 0),
     ]
 
-    /// Runs `work` behind a flickering flame that burns while it is in flight, labeled to
-    /// the right. The flame is cleared when `work` finishes.
+    /// Runs `work` behind a procedurally flickering flame that burns while it is in flight,
+    /// labeled to the right. The flame is cleared when `work` finishes.
     static func run<T>(_ label: String, work: () async throws -> T) async rethrows -> T {
         let style = Style.terminal
         guard style.isEnabled else { return try await work() }
@@ -36,7 +30,7 @@ enum Spinner {
                 drawFlame(step: step, label: label, firstDraw: firstDraw)
                 firstDraw = false
                 step += 1
-                try? await Task.sleep(for: .milliseconds(110))
+                try? await Task.sleep(for: .milliseconds(70))
             }
         }
 
@@ -52,8 +46,44 @@ enum Spinner {
         }
     }
 
+    /// Builds one procedurally-flickering flame frame; every row is exactly `flameWidth`
+    /// wide. Upper rows wobble and throw sparks so each `step` looks alive.
+    private static func flameFrame(step: Int) -> [String] {
+        let center = flameWidth / 2
+        var rows: [String] = []
+        for row in 0 ..< flameRows {
+            let depth = Double(row) / Double(flameRows - 1)
+            var half = Int(depth * depth * Double(center))
+            if row < flameRows - 2 { half += (hash(row, 0, step) % 3) - 1 }
+            half = max(0, min(center, half))
+            var line = ""
+            for column in 0 ..< flameWidth {
+                line += cell(row: row, column: column, center: center, half: half, step: step)
+            }
+            rows.append(line)
+        }
+        return rows
+    }
+
+    /// Resolves one flame cell: solid core, flickering jagged edge, or a stray spark up top.
+    private static func cell(row: Int, column: Int, center: Int, half: Int, step: Int) -> String {
+        let dist = abs(column - center)
+        if dist < half { return "█" }
+        if dist == half, half > 0 {
+            return hash(row, column, step) % 4 == 0 ? " " : (column < center ? "▟" : "▙")
+        }
+        if row <= 1, dist <= half + 1, hash(row, column, step) % 3 == 0 { return "▖" }
+        return " "
+    }
+
+    private static func hash(_ row: Int, _ column: Int, _ step: Int) -> Int {
+        var value = (row &* 73_856_093) ^ (column &* 19_349_663) ^ (step &* 83_492_791)
+        value = (value >> 13) ^ value
+        return abs(value)
+    }
+
     private static func drawFlame(step: Int, label: String, firstDraw: Bool) {
-        let rows = flame[step % flame.count]
+        let rows = flameFrame(step: step)
         let labelRow = flameRows / 2
         var out = ""
         if !firstDraw { out += "\u{1B}[\(flameRows)A" }
