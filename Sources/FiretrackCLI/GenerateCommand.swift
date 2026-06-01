@@ -20,9 +20,12 @@ struct GenerateCommand: ParsableCommand {
     @Flag(help: "Overwrite output if it already exists.")
     var overwrite = false
 
+    @OptionGroup var global: GlobalOptions
+
     init() {}
 
     func run() throws {
+        global.apply()
         try GenerateRunner().run(.init(
             planPath: config,
             outputPath: output,

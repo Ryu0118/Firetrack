@@ -20,9 +20,12 @@ struct PullCommand: AsyncParsableCommand {
     @Flag(help: "Overwrite the file if it already exists.")
     var overwrite = false
 
+    @OptionGroup var global: GlobalOptions
+
     init() {}
 
     func run() async throws {
+        global.apply()
         try await PullRunner().run(.init(
             outputPath: config,
             propertyID: propertyID,

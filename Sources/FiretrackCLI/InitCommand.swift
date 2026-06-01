@@ -14,7 +14,10 @@ struct InitCommand: ParsableCommand {
     @Flag(help: "Overwrite the file if it already exists.")
     var overwrite = false
 
+    @OptionGroup var global: GlobalOptions
+
     func run() throws {
+        global.apply()
         try InitRunner().run(.init(outputPath: config, overwrite: overwrite))
     }
 }

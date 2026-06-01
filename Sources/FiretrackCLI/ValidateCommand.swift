@@ -11,7 +11,10 @@ struct ValidateCommand: ParsableCommand {
     @Option(name: .customLong("config"), help: "Tracking-plan YAML path (default: ./firetrack.yml).")
     var config: String = "firetrack.yml"
 
+    @OptionGroup var global: GlobalOptions
+
     func run() throws {
+        global.apply()
         try ValidateRunner().run(.init(planPath: config))
     }
 }
