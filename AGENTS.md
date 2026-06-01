@@ -15,7 +15,7 @@ firetrack (exe) → FiretrackCLI → FiretrackOperations → {Configuration, GA4
 
 - `Sources/firetrack` — executable wrapper only. Bootstraps logging, then calls `FiretrackCommand.main()`.
 - `FiretrackCLI` — ArgumentParser declarations only. `run()` methods build a request value and call `XXXRunner(...).run(...)`. Holds `Version.swift` (`firetrack --version`).
-- `FiretrackOperations` — runners, output formatting (`logger`), dependency wiring, filesystem writes, logging setup.
+- `FiretrackOperations` — runners, output formatting (`logger`), dependency wiring, filesystem writes, logging setup. The `doctor` slot-machine animation is delegated to the external [SlotKit](https://github.com/Ryu0118/SlotKit) package.
 - `FiretrackConfiguration` — Yams decoding, schema models, validation, naming conversion, GA4 desired-state extraction.
 - `FiretrackGA4` — GA4 Admin API client, auth token providers, remote state, diff, apply.
 - `FiretrackSwiftGenerator` — string-based generation of the Swift analytics contract, validated by parsing (SwiftParser) before write.
