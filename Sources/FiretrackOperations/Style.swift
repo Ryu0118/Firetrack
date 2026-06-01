@@ -53,7 +53,6 @@ struct Style {
 
     /// An emoji glyph used as a leading icon. Raw values must stay unique.
     enum Glyph: String {
-        case fire = "🔥"
         case target = "🎯"
         case flask = "🧪"
         case ruler = "📐"
@@ -129,27 +128,6 @@ struct Style {
         return blink
             ? paint(" \(text.uppercased()) ", .bold, .blink, color)
             : paint(" \(text.uppercased()) ", .bold, color)
-    }
-
-    /// Returns banner box lines for a title, or `nil` when disabled (so callers skip it).
-    ///
-    /// The title is rendered as a rainbow gradient scrolled by `phase`.
-    func banner(_ title: String, phase: Int = 0) -> [String]? {
-        guard isEnabled else { return nil }
-        let label = "\(Glyph.fire.rawValue) \(title)"
-        // 🔥 renders as two terminal cells but counts as one Character, so the true
-        // display width is `count + 1`. Pad symmetrically and size the rules to match.
-        let padding = 2
-        let inner = label.count + 1 + padding * 2
-        let spaces = String(repeating: " ", count: padding)
-        let top = "╭" + String(repeating: "─", count: inner) + "╮"
-        let mid = "│" + spaces + label + spaces + "│"
-        let bottom = "╰" + String(repeating: "─", count: inner) + "╯"
-        return [
-            gradient(top, phase: phase),
-            gradient(mid, phase: phase),
-            gradient(bottom, phase: phase + 60),
-        ]
     }
 
     private static func hueToRGB(_ hue: Double) -> (Int, Int, Int) {

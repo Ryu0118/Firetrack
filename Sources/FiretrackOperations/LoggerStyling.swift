@@ -11,15 +11,6 @@ extension Logger {
         .terminal
     }
 
-    /// Emits a framed banner (interactive only); a no-op otherwise.
-    func banner(_ title: String) {
-        guard let lines = style.banner(title) else { return }
-        for line in lines {
-            info("\(line)")
-        }
-        info("")
-    }
-
     /// Emits a horizontal rule (interactive only); a no-op otherwise.
     func rule(phase: Int = 0) {
         guard let rule = style.marqueeRule(phase: phase) else { return }
