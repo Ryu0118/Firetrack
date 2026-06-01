@@ -12,7 +12,6 @@ package struct ValidateRunner {
         let configuration = try AnalyticsConfigurationLoader.load(path: request.planPath)
         try ConfigurationValidationGate.validate(configuration)
         let message = "Valid analytics tracking plan: \(request.planPath)"
-        Spinner.celebrate(message)
         logger.success(message)
     }
 }

@@ -12,7 +12,6 @@ package struct InitRunner {
         let outputURL = try FileGuard.prepareOutput(request.outputPath, overwrite: request.overwrite)
         try Self.template.write(to: outputURL, atomically: true, encoding: .utf8)
         let message = "Wrote starter tracking plan: \(outputURL.path(percentEncoded: false))"
-        Spinner.celebrate(message)
         logger.success(message)
     }
 

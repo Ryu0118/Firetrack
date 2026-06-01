@@ -22,7 +22,6 @@ package struct GenerateRunner {
         )
         try source.write(to: outputURL, atomically: true, encoding: .utf8)
         let message = "Generated Swift analytics contract: \(outputURL.path(percentEncoded: false))"
-        Spinner.celebrate(message)
         logger.success(message)
     }
 }

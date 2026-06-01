@@ -17,21 +17,16 @@ package struct GA4SyncRunner {
         logger.field("GA4 property", context.propertyID, icon: .target, valueColor: .cyan)
         logger.mode(request.apply ? "apply" : "dry-run", color: request.apply ? .green : .yellow)
         let token = try await context.tokenProvider.accessToken()
-        let plan = try await Spinner.run("Fetching GA4 state") {
-            let remote = try await client.remoteState(
-                propertyID: context.propertyID,
-                token: token,
-                includeBigQuery: context.desired.bigQueryLink != nil,
-            )
-            return try GA4SyncPlanner.plan(desired: context.desired, remote: remote)
-        }
+        let remote = try await client.remoteState(
+            propertyID: context.propertyID,
+            token: token,
+            includeBigQuery: context.desired.bigQueryLink != nil,
+        )
+        let plan = try GA4SyncPlanner.plan(desired: context.desired, remote: remote)
         GA4OutputFormatter.emitPlan(plan)
         if request.apply {
-            try await Spinner.run("Creating missing resources") {
-                try await client.apply(plan: plan, propertyID: context.propertyID, token: token)
-            }
+            try await client.apply(plan: plan, propertyID: context.propertyID, token: token)
             logger.info("")
-            Spinner.celebrate("Sync complete. Missing resources created.")
             logger.success("Sync complete. Missing resources created.")
         } else {
             logger.info("")

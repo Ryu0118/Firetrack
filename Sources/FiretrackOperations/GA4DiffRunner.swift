@@ -17,15 +17,13 @@ package struct GA4DiffRunner {
         logger.field("GA4 property", context.propertyID, icon: .target, valueColor: .cyan)
         logger.mode("dry-run", color: .yellow)
         do {
-            let plan = try await Spinner.run("Fetching GA4 state") {
-                let token = try await context.tokenProvider.accessToken()
-                let remote = try await client.remoteState(
-                    propertyID: context.propertyID,
-                    token: token,
-                    includeBigQuery: context.desired.bigQueryLink != nil,
-                )
-                return try GA4SyncPlanner.plan(desired: context.desired, remote: remote)
-            }
+            let token = try await context.tokenProvider.accessToken()
+            let remote = try await client.remoteState(
+                propertyID: context.propertyID,
+                token: token,
+                includeBigQuery: context.desired.bigQueryLink != nil,
+            )
+            let plan = try GA4SyncPlanner.plan(desired: context.desired, remote: remote)
             GA4OutputFormatter.emitPlan(plan)
             logger.info("")
             logger.hint("Read-only diff. Run `ga4 sync` to create these resources.")
