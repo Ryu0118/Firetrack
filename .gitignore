@@ -12,3 +12,4 @@ DerivedData/
 .serena/
 docs/
 .claude/scheduled_tasks.lock
+*.tmp
