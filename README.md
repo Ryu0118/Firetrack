@@ -34,7 +34,7 @@ nest install Ryu0118/Firetrack
 #### Mise ([jdx/mise](https://github.com/jdx/mise))
 
 ```bash
-mise use -g ubi:Ryu0118/Firetrack[exe=firetrack]
+mise use -g github:Ryu0118/Firetrack[exe=firetrack]
 ```
 
 #### Build from source
