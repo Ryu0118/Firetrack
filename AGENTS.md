@@ -41,6 +41,7 @@ The toolchain is pinned via `nestfile.yaml` and resolved into `.nest/bin/` by
 
 ## Conventions
 
+- When documentation and the existing code disagree, follow the conventions used in the existing code, and in your final reply list every inconsistency you found between the documentation and the code.
 - Swift 6.2, macOS 26 only. No Linux support.
 - Follow `.swiftlint.yml` strictly — **0 violations**. `--strict` is enforced by hooks and CI.
 - `swiftlint:disable` is **banned** (a PreToolUse hook blocks it). Fix the underlying issue.
